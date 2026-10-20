@@ -1,4 +1,4 @@
-#Trabalho 1 da Disciplina de Algorítmos e Estruturas de Dados - 2026
+# Trabalho 1 da Disciplina de Algorítmos e Estruturas de Dados - 2026
 ##Alunos
 |Nome | Número USP|
 |-----|---------|
