@@ -4,7 +4,7 @@
 |-----|---------|
 | Cecília Pignatelli de Oliveira | 17884078|
 | Chrystian Eloy de Assunção | |
-| Luís Fernando de Oliveira | |
+| Luís Fernando de Oliveira Souza | |
 
 ## Descrição do Projeto
 O projeto é dividido em duas partes, em sua essência, que diferem nos Datasets utilizados.
