@@ -2,16 +2,18 @@
 #define PILHA_H
 
 #include <stdbool.h>
+#include <stddef.h>
 #include "item.h"
 
 typedef struct pilha_ PILHA;
 
 PILHA *pilha_criar(void);
-bool pilha_empilhar(PILHA *p, ITEM *item);
-ITEM *pilha_desempilhar(PILHA *p);
+bool pilha_inserir(PILHA *p, ITEM *item); 
+ITEM *pilha_remover(PILHA *p);   
 ITEM *pilha_topo(const PILHA *p);
 bool pilha_vazia(const PILHA *p);
-int pilha_tamanho(const PILHA *p);
-void pilha_apagar(PILHA **p);
+size_t pilha_tamanho(const PILHA *p);
+void pilha_percorrer(PILHA *p, void (*cb)(ITEM*, void*), void *ctx);
+void pilha_destruir(PILHA *p, bool owns_items);
 
 #endif

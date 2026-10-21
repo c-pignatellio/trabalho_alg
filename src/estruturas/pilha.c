@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "pilha.h"
+#include "../../include/estruturas/pilha.h"
 
 typedef struct no_ NO_PILHA;
 struct no_ {
@@ -9,7 +9,7 @@ struct no_ {
 
 struct pilha_ {
     NO_PILHA *topo;
-    int tamanho;
+    size_t tamanho;
 };
 
 PILHA *pilha_criar(void) {
@@ -21,7 +21,7 @@ PILHA *pilha_criar(void) {
     return p;
 }
 
-bool pilha_empilhar(PILHA *p, ITEM *item) {
+bool pilha_inserir(PILHA *p, ITEM *item) {
     if (p == NULL) return false;
     NO_PILHA *novo = malloc(sizeof(NO_PILHA));
     if (novo == NULL) return false;
@@ -32,7 +32,7 @@ bool pilha_empilhar(PILHA *p, ITEM *item) {
     return true;
 }
 
-ITEM *pilha_desempilhar(PILHA *p) {
+ITEM *pilha_remover(PILHA *p) {
     if (pilha_vazia(p)) return NULL;
     NO_PILHA *aux = p->topo;
     ITEM *item = aux->item;
@@ -50,16 +50,27 @@ bool pilha_vazia(const PILHA *p) {
     return (p == NULL || p->topo == NULL);
 }
 
-int pilha_tamanho(const PILHA *p) {
+size_t pilha_tamanho(const PILHA *p) {
     return p ? p->tamanho : 0;
 }
 
-void pilha_apagar(PILHA **p) {
-    if (p == NULL || *p == NULL) return;
-    while (!pilha_vazia(*p)) {
-        ITEM *it = pilha_desempilhar(*p);
-        item_apagar(&it);
+void pilha_percorrer(PILHA *p, void (*cb)(ITEM*, void*), void *ctx) {
+    if (p == NULL || cb == NULL) return;
+    for (NO_PILHA *n = p->topo; n != NULL; n = n->prox) {
+        cb(n->item, ctx);
     }
-    free(*p);
-    *p = NULL;
+}
+
+void pilha_destruir(PILHA *p, bool owns_items) {
+    if (p == NULL) return;
+    NO_PILHA *n = p->topo;
+    while (n != NULL) {
+        NO_PILHA *prox = n->prox;
+        if (owns_items && n->item != NULL) {
+            item_apagar(&n->item);
+        }
+        free(n);
+        n = prox;
+    }
+    free(p);
 }

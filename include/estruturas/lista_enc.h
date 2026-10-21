@@ -2,15 +2,15 @@
 #define LISTA_ENC_H
 
 #include <stdbool.h>
+#include <stddef.h>
 #include "item.h"
 
 typedef struct lista_enc_ LISTA_ENC;
-typedef void (*CallbackEnc)(ITEM *item, void *contexto);
 
 LISTA_ENC *lista_enc_criar(void);
 bool lista_enc_inserir(LISTA_ENC *l, ITEM *item);
-int lista_enc_tamanho(const LISTA_ENC *l);
-void lista_enc_percorrer(const LISTA_ENC *l, CallbackEnc funcao, void *contexto);
-void lista_enc_apagar(LISTA_ENC **l);
+size_t lista_enc_tamanho(const LISTA_ENC *l);
+void lista_enc_percorrer(LISTA_ENC *l, void (*cb)(ITEM*, void*), void *ctx);
+void lista_enc_destruir(LISTA_ENC *l, bool owns_items);
 
 #endif

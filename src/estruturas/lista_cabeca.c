@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "lista_cabeca.h"
+#include "../../include/estruturas/lista_cabeca.h"
 
 typedef struct no_ NO_CABECA;
 struct no_ {
@@ -9,13 +9,14 @@ struct no_ {
 
 struct lista_cabeca_ {
     NO_CABECA *cabeca;
-    int tamanho;
+    size_t tamanho;
 };
 
 LISTA_CABECA *lista_cabeca_criar(void) {
     LISTA_CABECA *l = malloc(sizeof(LISTA_CABECA));
     if (l != NULL) {
         l->cabeca = malloc(sizeof(NO_CABECA));
+        if (l->cabeca == NULL) { free(l); return NULL; }
         l->cabeca->item = NULL;
         l->cabeca->prox = NULL;
         l->tamanho = 0;
@@ -34,30 +35,27 @@ bool lista_cabeca_inserir(LISTA_CABECA *l, ITEM *item) {
     return true;
 }
 
-int lista_cabeca_tamanho(const LISTA_CABECA *l) {
+size_t lista_cabeca_tamanho(const LISTA_CABECA *l) {
     return l ? l->tamanho : 0;
 }
 
-void lista_cabeca_percorrer(const LISTA_CABECA *l, CallbackCabeca funcao, void *contexto) {
-    if (l == NULL || funcao == NULL) return;
-    NO_CABECA *atual = l->cabeca->prox;
-    while (atual != NULL) {
-        funcao(atual->item, contexto);
-        atual = atual->prox;
+void lista_cabeca_percorrer(LISTA_CABECA *l, void (*cb)(ITEM*, void*), void *ctx) {
+    if (l == NULL || cb == NULL) return;
+    for (NO_CABECA *n = l->cabeca->prox; n != NULL; n = n->prox) {
+        cb(n->item, ctx);
     }
 }
 
-void lista_cabeca_apagar(LISTA_CABECA **l) {
-    if (l == NULL || *l == NULL) return;
-    NO_CABECA *atual = (*l)->cabeca;
-    while (atual != NULL) {
-        NO_CABECA *prox = atual->prox;
-        if (atual->item != NULL) {
-            item_apagar(&(atual->item));
+void lista_cabeca_destruir(LISTA_CABECA *l, bool owns_items) {
+    if (l == NULL) return;
+    NO_CABECA *n = l->cabeca;
+    while (n != NULL) {
+        NO_CABECA *prox = n->prox;
+        if (owns_items && n->item != NULL) {
+            item_apagar(&n->item);
         }
-        free(atual);
-        atual = prox;
+        free(n);
+        n = prox;
     }
-    free(*l);
-    *l = NULL;
+    free(l);
 }
