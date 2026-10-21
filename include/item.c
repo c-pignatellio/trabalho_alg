@@ -261,8 +261,8 @@ bool item_numero(const ITEM *item, int idx, double *valor) {
     return true;
 }
 
-void item_escrever(const ITEM *item, FILE *saida) {
+void item_escrever(const ITEM *item, FILE *saida){
     if (item == NULL || saida == NULL) return;
     fputs(item->linha, saida);
     fputs(item->esq->fim, saida);
-}
+} 

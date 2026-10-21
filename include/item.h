@@ -50,7 +50,7 @@ bool item_ausente(const ITEM *item, int idx);
  * sem diferenciar maiusculas). Devolve false se ausente ou nao numerico. */
 bool item_numero(const ITEM *item, int idx, double *valor);
 
-/* Escreve a linha original, byte a byte, no mesmo formato da entrada. */
+/* Escreve a linha original, byte a byte, no mesmo formato da entrada.*/
 void item_escrever(const ITEM *item, FILE *saida);
 
-#endif
+#endif 
