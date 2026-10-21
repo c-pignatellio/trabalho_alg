@@ -3,7 +3,7 @@
 |Nome | Número USP|
 |-----|---------|
 | Cecília Pignatelli de Oliveira | 17884078|
-| Chrystian Eloy de Assunção | |
+| Chrystian Eloy de Assunção | 18115512|
 | Luís Fernando de Oliveira Souza | |
 
 ## Descrição do Projeto
