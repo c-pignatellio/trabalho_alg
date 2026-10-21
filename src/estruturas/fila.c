@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "fila.h"
+#include "../../include/estruturas/fila.h"
 
 typedef struct no_ NO_FILA;
 struct no_ {
@@ -10,7 +10,7 @@ struct no_ {
 struct fila_ {
     NO_FILA *inicio;
     NO_FILA *fim;
-    int tamanho;
+    size_t tamanho;
 };
 
 FILA *fila_criar(void) {
@@ -23,30 +23,25 @@ FILA *fila_criar(void) {
     return f;
 }
 
-bool fila_enfileirar(FILA *f, ITEM *item) {
+bool fila_inserir(FILA *f, ITEM *item) {
     if (f == NULL) return false;
     NO_FILA *novo = malloc(sizeof(NO_FILA));
     if (novo == NULL) return false;
     novo->item = item;
     novo->prox = NULL;
-    if (f->fim == NULL) {
-        f->inicio = novo;
-    } else {
-        f->fim->prox = novo;
-    }
+    if (f->fim == NULL) f->inicio = novo;
+    else f->fim->prox = novo;
     f->fim = novo;
     f->tamanho++;
     return true;
 }
 
-ITEM *fila_desenfileirar(FILA *f) {
+ITEM *fila_remover(FILA *f) {
     if (fila_vazia(f)) return NULL;
     NO_FILA *aux = f->inicio;
     ITEM *item = aux->item;
     f->inicio = aux->prox;
-    if (f->inicio == NULL) {
-        f->fim = NULL;
-    }
+    if (f->inicio == NULL) f->fim = NULL;
     free(aux);
     f->tamanho--;
     return item;
@@ -60,16 +55,27 @@ bool fila_vazia(const FILA *f) {
     return (f == NULL || f->inicio == NULL);
 }
 
-int fila_tamanho(const FILA *f) {
+size_t fila_tamanho(const FILA *f) {
     return f ? f->tamanho : 0;
 }
 
-void fila_apagar(FILA **f) {
-    if (f == NULL || *f == NULL) return;
-    while (!fila_vazia(*f)) {
-        ITEM *it = fila_desenfileirar(*f);
-        item_apagar(&it);
+void fila_percorrer(FILA *f, void (*cb)(ITEM*, void*), void *ctx) {
+    if (f == NULL || cb == NULL) return;
+    for (NO_FILA *n = f->inicio; n != NULL; n = n->prox) {
+        cb(n->item, ctx);
     }
-    free(*f);
-    *f = NULL;
+}
+
+void fila_destruir(FILA *f, bool owns_items) {
+    if (f == NULL) return;
+    NO_FILA *n = f->inicio;
+    while (n != NULL) {
+        NO_FILA *prox = n->prox;
+        if (owns_items && n->item != NULL) {
+            item_apagar(&n->item);
+        }
+        free(n);
+        n = prox;
+    }
+    free(f);
 }

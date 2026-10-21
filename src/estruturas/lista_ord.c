@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "lista_ord.h"
+#include "../../include/estruturas/lista_ord.h"
 
 typedef struct no_ NO_ORD;
 struct no_ {
@@ -10,7 +10,7 @@ struct no_ {
 
 struct lista_ord_ {
     NO_ORD *inicio;
-    int tamanho;
+    size_t tamanho;
 };
 
 LISTA_ORD *lista_ord_criar(void) {
@@ -31,44 +31,38 @@ bool lista_ord_inserir(LISTA_ORD *l, ITEM *item, double chave_ordenacao) {
 
     NO_ORD *ant = NULL;
     NO_ORD *atual = l->inicio;
-
     while (atual != NULL && atual->chave_ordenacao < chave_ordenacao) {
         ant = atual;
         atual = atual->prox;
     }
-
     novo->prox = atual;
-    if (ant == NULL) {
-        l->inicio = novo;
-    } else {
-        ant->prox = novo;
-    }
+    if (ant == NULL) l->inicio = novo;
+    else ant->prox = novo;
     l->tamanho++;
     return true;
 }
 
-int lista_ord_tamanho(const LISTA_ORD *l) {
+size_t lista_ord_tamanho(const LISTA_ORD *l) {
     return l ? l->tamanho : 0;
 }
 
-void lista_ord_percorrer(const LISTA_ORD *l, CallbackOrd funcao, void *contexto) {
-    if (l == NULL || funcao == NULL) return;
-    NO_ORD *atual = l->inicio;
-    while (atual != NULL) {
-        funcao(atual->item, contexto);
-        atual = atual->prox;
+void lista_ord_percorrer(LISTA_ORD *l, void (*cb)(ITEM*, void*), void *ctx) {
+    if (l == NULL || cb == NULL) return;
+    for (NO_ORD *n = l->inicio; n != NULL; n = n->prox) {
+        cb(n->item, ctx);
     }
 }
 
-void lista_ord_apagar(LISTA_ORD **l) {
-    if (l == NULL || *l == NULL) return;
-    NO_ORD *atual = (*l)->inicio;
-    while (atual != NULL) {
-        NO_ORD *prox = atual->prox;
-        item_apagar(&(atual->item));
-        free(atual);
-        atual = prox;
+void lista_ord_destruir(LISTA_ORD *l, bool owns_items) {
+    if (l == NULL) return;
+    NO_ORD *n = l->inicio;
+    while (n != NULL) {
+        NO_ORD *prox = n->prox;
+        if (owns_items && n->item != NULL) {
+            item_apagar(&n->item);
+        }
+        free(n);
+        n = prox;
     }
-    free(*l);
-    *l = NULL;
+    free(l);
 }

@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "lista_enc.h"
+#include "../../include/estruturas/lista_enc.h"
 
 typedef struct no_ NO_ENC;
 struct no_ {
@@ -9,7 +9,7 @@ struct no_ {
 
 struct lista_enc_ {
     NO_ENC *inicio;
-    int tamanho;
+    size_t tamanho;
 };
 
 LISTA_ENC *lista_enc_criar(void) {
@@ -32,28 +32,27 @@ bool lista_enc_inserir(LISTA_ENC *l, ITEM *item) {
     return true;
 }
 
-int lista_enc_tamanho(const LISTA_ENC *l) {
+size_t lista_enc_tamanho(const LISTA_ENC *l) {
     return l ? l->tamanho : 0;
 }
 
-void lista_enc_percorrer(const LISTA_ENC *l, CallbackEnc funcao, void *contexto) {
-    if (l == NULL || funcao == NULL) return;
-    NO_ENC *atual = l->inicio;
-    while (atual != NULL) {
-        funcao(atual->item, contexto);
-        atual = atual->prox;
+void lista_enc_percorrer(LISTA_ENC *l, void (*cb)(ITEM*, void*), void *ctx) {
+    if (l == NULL || cb == NULL) return;
+    for (NO_ENC *n = l->inicio; n != NULL; n = n->prox) {
+        cb(n->item, ctx);
     }
 }
 
-void lista_enc_apagar(LISTA_ENC **l) {
-    if (l == NULL || *l == NULL) return;
-    NO_ENC *atual = (*l)->inicio;
-    while (atual != NULL) {
-        NO_ENC *prox = atual->prox;
-        item_apagar(&(atual->item));
-        free(atual);
-        atual = prox;
+void lista_enc_destruir(LISTA_ENC *l, bool owns_items) {
+    if (l == NULL) return;
+    NO_ENC *n = l->inicio;
+    while (n != NULL) {
+        NO_ENC *prox = n->prox;
+        if (owns_items && n->item != NULL) {
+            item_apagar(&n->item);
+        }
+        free(n);
+        n = prox;
     }
-    free(*l);
-    *l = NULL;
+    free(l);
 }
