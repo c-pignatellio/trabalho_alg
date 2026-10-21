@@ -1,3 +1,17 @@
+/*
+
+----COMENTARIOS SOBRE A MAIN:----
+
+FIZERAM PRA MIM NUM CONTEXTO GERAL DO PROJETO JA CONSIDERANDO READER, WRITER, QUERY E AS FUNCOES TUDO
+MAS QUANDO FORMOS DESENVOLVER ESSES ARQUIVOS PODE SER QUE MUDE COISA DA MAIN
+O QUE RECOMENDO É DEIXAR POR ENQUANDO PRA TER MEIO COMO CONSULTA MAS HONESTAMENTE PODE APAGAR TUDO QUE EU N VOU LIGAR
+(SÓ AS ROTAS DOS ARQUIVOS QUE PRECISA PRESTAR ATENCAO)
+
+*/
+
+
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -64,7 +78,7 @@ typedef struct {
     double       insert_ms;   /* acumulado só do insert em result */
 } BuscaCtx;
 
-static void busca_visita(Item *it, void *ctx_) {
+static void busca_visita(ITEM *it, void *ctx_) {
     BuscaCtx *ctx = ctx_;
     if (!query_accepts(ctx->q, it)) return;
     ctx->matched++;
@@ -82,7 +96,7 @@ typedef struct {
     bool    stop;
 } WriteCtx;
 
-static void write_visita(Item *it, void *ctx_) {
+static void write_visita(ITEM *it, void *ctx_) {
     WriteCtx *ctx = ctx_;
     if (ctx->stop) return;
     if (ctx->top_k > 0 && ctx->written >= ctx->top_k) {
@@ -145,7 +159,7 @@ int main(int argc, char **argv) {
     /* 6. LOAD */
     double t_load0 = now_ms();
     long input_records = 0;
-    Item *it;
+    ITEM *it;
     while ((it = reader_next(rd)) != NULL) {
         if (a.limit > 0 && input_records >= a.limit) { item_free(it); break; }
         estrutura_inserir(base, it);
@@ -183,7 +197,7 @@ int main(int argc, char **argv) {
     rc = 0;
 
 fim:
-    /* ordem inversa; res não libera Items, base libera */
+    /* ordem inversa; res não libera ITEMs, base libera */
     estrutura_destroy(res);
     estrutura_destroy(base);
     query_destroy(q);
