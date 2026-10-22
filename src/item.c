@@ -4,7 +4,7 @@
 #include <errno.h>
 #include <math.h>
 #include <limits.h>
-#include "item.h"
+#include "../include/item.h"
 
 /* ================================================================ ESQUEMA */
 

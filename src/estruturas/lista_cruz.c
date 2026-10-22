@@ -47,17 +47,21 @@ static CABECA_DIM *obter_ou_criar_cabeca(CABECA_DIM **lista, const char *valor) 
 
 bool lista_cruz_inserir(LISTA_CRUZ *lc, ITEM *item, const char *dim1_val, const char *dim2_val) {
     if (lc == NULL) return false;
+
     NO_CRUZ *novo = malloc(sizeof(NO_CRUZ));
     if (novo == NULL) return false;
     novo->item = item;
+    novo->prox_dim1 = NULL;
+    novo->prox_dim2 = NULL;
 
     CABECA_DIM *c1 = obter_ou_criar_cabeca(&lc->dim1_cabecas, dim1_val);
     if (!c1) { free(novo); return false; }
-    novo->prox_dim1 = c1->primeiro_no;
-    c1->primeiro_no = novo;
 
     CABECA_DIM *c2 = obter_ou_criar_cabeca(&lc->dim2_cabecas, dim2_val);
-    if (!c2) { free(novo); return false; }
+    if (!c2) { free(novo); return false; }   /* c1 não foi mutada ainda → OK */
+
+    novo->prox_dim1 = c1->primeiro_no;
+    c1->primeiro_no = novo;
     novo->prox_dim2 = c2->primeiro_no;
     c2->primeiro_no = novo;
 

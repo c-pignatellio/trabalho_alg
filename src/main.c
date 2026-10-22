@@ -19,11 +19,11 @@ O QUE RECOMENDO É DEIXAR POR ENQUANDO PRA TER MEIO COMO CONSULTA MAS HONESTAMEN
 #include <getopt.h>
 #include <time.h>
 
-#include "./estruturas/item.h"
-#include "./estruturas/reader.h"
-#include "./estruturas/writer.h"
-#include "./estruturas/query.h"
-#include "./estruturas/estrutura.h"
+#include "./item.h"
+#include "../include/estruturas/reader.h"
+#include "../include/estruturas/writer.h"
+#include "../include/estruturas/query.h"
+#include "../include/estruturas/estrutura.h"
 
 /* ---------- utilidades ---------- */
 
