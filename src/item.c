@@ -2,6 +2,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "../../include/item.h"
+//so 
 
 
 struct esquema_ {
