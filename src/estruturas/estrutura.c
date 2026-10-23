@@ -85,31 +85,33 @@ static void cabeca_inserir(void *impl, ITEM *it, Estrutura *e) {
     lista_cabeca_inserir((LISTA_CABECA *)impl, it);
 }
 static void gen_inserir(void *impl, ITEM *it, Estrutura *e) {
-    /* e->group contém nomes de GRUPOS; o subgrupo vem de um campo do ITEM */
-    Estrutura *em = (Estrutura *)e;
+    Estrutura *em = e;
+    const ESQUEMA *esq = item_esquema(it);
 
-    const char *grupo;
-    if (e->n_group > 0 && e->group) {
-        grupo = e->group[em->idx_gen % (size_t)e->n_group];
-    } else {
-        /* fallback: usa o primeiro campo do item como grupo */
-        grupo = item_texto(it, 0);
+    const char *grupo = "default", *sub = "default";
+    if (e->n_group >= 1 && e->group) {
+        int idx = esquema_indice(esq, e->group[0]);
+        if (idx >= 0) grupo = item_texto(it, idx);
     }
-
-    const char *subgrupo = "default";  /* ajuste conforme sua regra */
-    lista_gen_inserir((LISTA_GEN *)impl, grupo, subgrupo, it);
-    em->idx_gen++;
+    if (e->n_group >= 2 && e->group) {
+        int idx = esquema_indice(esq, e->group[1]);
+        if (idx >= 0) sub = item_texto(it, idx);
+    }
+    lista_gen_inserir((LISTA_GEN*)impl, grupo, sub, it);
 }
 
 static void cruz_inserir(void *impl, ITEM *it, Estrutura *e) {
-    const char *d1 = (e->n_cross > 0 && e->cross)
-                     ? e->cross[e->idx_cruz % (size_t)e->n_cross]
-                     : item_texto(it, 0);
-    const char *d2 = (e->n_cross > 0 && e->cross)
-                     ? e->cross[(e->idx_cruz + 1) % (size_t)e->n_cross]
-                     : item_texto(it, 1);
-    lista_cruz_inserir((LISTA_CRUZ *)impl, it, d1, d2);
-    e->idx_cruz++;
+    const ESQUEMA *esq = item_esquema(it);
+    const char *v1 = "default", *v2 = "default";
+    if (e->n_cross >= 1 && e->cross) {
+        int idx = esquema_indice(esq, e->cross[0]);
+        if (idx >= 0) v1 = item_texto(it, idx);
+    }
+    if (e->n_cross >= 2 && e->cross) {
+        int idx = esquema_indice(esq, e->cross[1]);
+        if (idx >= 0) v2 = item_texto(it, idx);
+    }
+    lista_cruz_inserir((LISTA_CRUZ*)impl, it, v1, v2);
 }
 
 

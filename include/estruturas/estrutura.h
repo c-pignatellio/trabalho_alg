@@ -4,16 +4,16 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include "../item.h"
+#include "../query.h"
 
 typedef struct Estrutura Estrutura;
 
 typedef struct {
     const char *ordem_campo;
     bool        ordem_desc;
-    const char **group;
-    int         n_group;
-    const char **cross;
-    int         n_cross;
+    const char *const *group; int n_group;
+    const char *const *cross; int n_cross;
+    const Query *query;
 } EstruturaCfg;
 
 Estrutura *estrutura_create(const char *nome, const EstruturaCfg *cfg);

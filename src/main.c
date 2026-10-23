@@ -134,7 +134,7 @@ int main(int argc, char **argv) {
     }
 
     /* 2. writer (cabeçalho já sai) */
-    wr = writer_create(a.output, reader_header(rd));
+    wr = writer_create(a.output, reader_esquema(rd));
     if (!wr) { fprintf(stderr, "erro: output '%s'\n", a.output); goto fim; }
 
     /* 3. query (metadados p/ estruturas avançadas) */
@@ -143,13 +143,14 @@ int main(int argc, char **argv) {
 
     /* 4. cfg comum às duas estruturas */
     EstruturaCfg cfg = {
-        .ordem_campo = query_order_field(q),
-        .ordem_desc  = query_order_desc(q),
-        .group       = query_group_fields(q),   /* ajuste ao seu header */
-        .n_group     = query_group_nfields(q),
-        .cross       = query_cross_fields(q),
-        .n_cross     = query_cross_nfields(q),
-    };
+    .ordem_campo = query_order_field(q),
+    .ordem_desc  = query_order_desc(q),
+    .group       = query_group_fields(q),
+    .n_group     = query_group_nfields(q),
+    .cross       = query_cross_fields(q),
+    .n_cross     = query_cross_nfields(q),
+    .query       = q,
+};
 
     /* 5. base */
     base = estrutura_create(a.base, &cfg);
