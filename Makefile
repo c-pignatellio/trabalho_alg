@@ -16,11 +16,16 @@ OBJS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRCS))
 DEPS := $(OBJS:.o=.d)
 
 # Exemplo usado por "make run" e "make valgrind".
-DADOS   := dados/asteroid_dataset_20251019.csv
-CONSULTA:= consultas/q1.txt
-ARGS    := --reader nasa --input $(DADOS) --base lista_enc \
+# DADOS     := dados/asteroid_dataset_20251019.csv
+# CONSULTA  := consultas/nasa_q1.txt
+# RESULTADO := resultado_nasa.csv
+READER  := deter
+DADOS   := dados/deter_amazonia.csv
+CONSULTA:= consultas/deter_q1.txt
+RESULTADO := resultado_deter.csv
+ARGS    := --reader $(READER) --input $(DADOS) --base lista_enc \
            --result lista_ord --query $(CONSULTA) \
-           --output resultado.csv --top-k 100
+           --output $(RESULTADO) --top-k 100
 
 .PHONY: all debug run valgrind clean
 
@@ -41,13 +46,13 @@ debug: LDFLAGS := -fsanitize=address,undefined
 debug: clean $(TARGET)
 
 run: $(TARGET)
-	./$(TARGET) $(ARGS) --limit 10000
+	./$(TARGET) $(ARGS) --limit 0
 
 valgrind: $(TARGET)
 	valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1 \
-		./$(TARGET) $(ARGS) --limit 1000
+		./$(TARGET) $(ARGS) --limit 0
 
 clean:
-	rm -rf $(OBJ_DIR) $(TARGET) resultado.csv
+	rm -rf $(OBJ_DIR) $(TARGET) $(RESULTADO)
 
 -include $(DEPS)
