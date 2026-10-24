@@ -21,5 +21,6 @@ typedef struct {
 } ReaderPerfil;
 
 extern const ReaderPerfil READER_PERFIL_NASA;
+extern const ReaderPerfil READER_PERFIL_DETER;
 
 #endif

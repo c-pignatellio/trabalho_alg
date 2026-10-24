@@ -7,7 +7,8 @@
 
 /* Tabela de datasets conhecidos: --reader <nome> escolhe uma entrada. */
 static const ReaderPerfil *const PERFIS[] = {
-    &READER_PERFIL_NASA
+    &READER_PERFIL_NASA,
+    &READER_PERFIL_DETER
 };
 #define N_PERFIS ((int)(sizeof PERFIS / sizeof PERFIS[0]))
 
