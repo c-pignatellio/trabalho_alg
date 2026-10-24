@@ -19,10 +19,10 @@ O QUE RECOMENDO É DEIXAR POR ENQUANDO PRA TER MEIO COMO CONSULTA MAS HONESTAMEN
 #include <getopt.h>
 #include <time.h>
 
-#include "./item.h"
-#include "../include/estruturas/reader.h"
-#include "../include/estruturas/writer.h"
-#include "../include/estruturas/query.h"
+#include "../include/estruturas/item.h"
+#include "../include/reader.h"
+#include "../include/writer.h"
+#include "../include/query.h"
 #include "../include/estruturas/estrutura.h"
 
 /* ---------- utilidades ---------- */
@@ -162,7 +162,7 @@ int main(int argc, char **argv) {
     long input_records = 0;
     ITEM *it;
     while ((it = reader_next(rd)) != NULL) {
-        if (a.limit > 0 && input_records >= a.limit) { item_free(it); break; }
+        if (a.limit > 0 && input_records >= a.limit) { item_apagar(&it); break; }
         estrutura_inserir(base, it);
         input_records++;
     }

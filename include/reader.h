@@ -2,7 +2,7 @@
 #define READER_H
 
 #include <stdbool.h>
-#include "estruturas/item.h"
+#include "item.h"
 
 /*
  * TAD Reader: transforma um arquivo de dados em uma sequencia de ITENS.

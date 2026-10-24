@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include "../item.h"
+#include "../estruturas/item.h"
 #include "../query.h"
 
 typedef struct Estrutura Estrutura;

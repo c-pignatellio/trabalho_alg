@@ -10,7 +10,7 @@
 #include "../../include/estruturas/lista_ord.h"
 #include "../../include/estruturas/lista_gen.h"
 #include "../../include/estruturas/lista_cruz.h"
-#include "../../include/item.h"
+#include "../../include/estruturas/item.h"
 
 typedef enum {
     T_PILHA, T_FILA, T_SEQ, T_ENC, T_CABECA, T_ORD, T_GEN, T_CRUZ
