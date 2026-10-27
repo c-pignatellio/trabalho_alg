@@ -15,18 +15,6 @@ SRCS := $(wildcard $(SRC_DIR)/*.c) $(wildcard $(SRC_DIR)/estruturas/*.c)
 OBJS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRCS))
 DEPS := $(OBJS:.o=.d)
 
-<<<<<<< HEAD
-# Exemplo usado por "make run" e "make valgrind".
-#DADOS     := dados/asteroid_dataset_20251019.csv
-#CONSULTA  := consultas/nasa_q3.txt
-#RESULTADO := resultado_nasa.csv
-#READER    := nasa
-
- DADOS     := dados/deter_amazonia.csv
- CONSULTA  := consultas/deter_q1.txt
- RESULTADO := resultado_deter.csv
- READER    := deter
-=======
 # Dataset usado por "make run", "make valgrind" e "make todas".
 # Troque aqui ou na linha de comando: make todas READER=deter ...
 DADOS     := dados/asteroid_dataset_20251019.csv
@@ -37,7 +25,6 @@ READER    := nasa
 # CONSULTA  := consultas/deter_q1.txt
 # RESULTADO := resultado_deter.csv
 # READER    := deter
->>>>>>> 3b759c5242ede5492b0dd3e23e6064604d859c9e
 ARGS    := --reader $(READER) --input $(DADOS) --base lista_enc \
            --result lista_ord --query $(CONSULTA) \
            --output $(RESULTADO) --top-k 100
