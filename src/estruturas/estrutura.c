@@ -85,7 +85,6 @@ static void cabeca_inserir(void *impl, ITEM *it, Estrutura *e) {
     lista_cabeca_inserir((LISTA_CABECA *)impl, it);
 }
 static void gen_inserir(void *impl, ITEM *it, Estrutura *e) {
-    Estrutura *em = e;
     const ESQUEMA *esq = item_esquema(it);
 
     const char *grupo = "default", *sub = "default";
