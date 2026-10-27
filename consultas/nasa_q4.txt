@@ -1,0 +1,8 @@
+FILTER|is_past_event|==|true
+FILTER|year|>=|2000
+FILTER|days_until_approach|>=|-30
+SIM|distance_au|0.02|0.05|1.0
+ACCEPT|0.30
+ORDER|distance_au|ASC
+GROUP|year|threat_category
+CROSS|year|threat_category
