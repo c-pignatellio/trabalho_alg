@@ -1,5 +1,5 @@
 #include "../include/query.h"
-#define _POSIX_C_SOURCE 200809
+#define _POSIX_C_SOURCE 200809L
 #include <ctype.h>
 #include <errno.h>
 #include <math.h>
