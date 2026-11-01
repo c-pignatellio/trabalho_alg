@@ -3,6 +3,7 @@ obj/
 *.d
 
 /trabalho
+/saidas
 
 /resultado_deter.csv
 /resultado_nasa.csv

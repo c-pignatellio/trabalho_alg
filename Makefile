@@ -17,16 +17,16 @@ DEPS := $(OBJS:.o=.d)
 
 # Dataset usado por "make run", "make valgrind" e "make todas".
 # Troque aqui ou na linha de comando: make todas READER=deter ...
-DADOS     := dados/asteroid_dataset_20251019.csv
-CONSULTA  := consultas/nasa_q1.txt
-RESULTADO := resultado_nasa.csv
-READER    := nasa
-# DADOS     := dados/deter_amazonia.csv
-# CONSULTA  := consultas/deter_q1.txt
-# RESULTADO := resultado_deter.csv
-# READER    := deter
-ARGS    := --reader $(READER) --input $(DADOS) --base lista_enc \
-           --result lista_ord --query $(CONSULTA) \
+#DADOS     := dados/asteroid_dataset_20251019.csv
+#CONSULTA  := consultas/nasa_q4.txt
+#RESULTADO := resultado_nasa.csv
+#READER    := nasa
+DADOS     := dados/deter_amazonia.csv
+CONSULTA  := consultas/deter_q4.txt
+RESULTADO := resultado_deter.csv
+READER    := deter
+ARGS    := --reader $(READER) --input $(DADOS) --base lista_gen \
+           --result pilha --query $(CONSULTA) \
            --output $(RESULTADO) --top-k 100
 
 # ---- Execucao de todas as combinacoes base x resultado --------------
