@@ -1,107 +1,62 @@
-CC       := gcc
-STD      := -std=c11 -D_POSIX_C_SOURCE=200809L
-WARN     := -Wall -Wextra -pedantic
-INCLUDES := -Iinclude -Iinclude/estruturas
-CFLAGS   := $(STD) $(WARN) -O2 $(INCLUDES)
-LDFLAGS  :=
-LDLIBS   := -lm
+CC     := gcc
+CFLAGS := -std=c11 -D_POSIX_C_SOURCE=200809L -Wall -Wextra -pedantic -O2 -Iinclude -Iinclude/estruturas
+LDLIBS := -lm
+TARGET := trabalho
 
-TARGET  := trabalho
-SRC_DIR := src
-OBJ_DIR := obj
+SRCS := $(wildcard src/*.c) $(wildcard src/estruturas/*.c)
+OBJS := $(SRCS:src/%.c=obj/%.o)
 
-# Todos os .c de src/ e src/estruturas/ (arquivos novos entram sozinhos).
-SRCS := $(wildcard $(SRC_DIR)/*.c) $(wildcard $(SRC_DIR)/estruturas/*.c)
-OBJS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRCS))
-DEPS := $(OBJS:.o=.d)
+# Atalhos de teste (a correcao automatica chama ./trabalho direto).
+# Uso: make run DATASET=deter BASE=lista_gen RES=pilha
+DATASET  ?= nasa
+nasa_in  := dados/asteroid_dataset_20251019.csv
+nasa_q   := consultas/nasa_q1.txt
+deter_in := dados/deter_amazonia.csv
+deter_q  := consultas/deter_q1.txt
 
-# Dataset usado por "make run", "make valgrind" e "make todas".
-# Troque aqui ou na linha de comando: make todas READER=deter ...
-#DADOS     := dados/asteroid_dataset_20251019.csv
-#CONSULTA  := consultas/nasa_q4.txt
-#RESULTADO := resultado_nasa.csv
-#READER    := nasa
-DADOS     := dados/deter_amazonia.csv
-CONSULTA  := consultas/deter_q4.txt
-RESULTADO := resultado_deter.csv
-READER    := deter
-ARGS    := --reader $(READER) --input $(DADOS) --base lista_gen \
-           --result pilha --query $(CONSULTA) \
-           --output $(RESULTADO) --top-k 100
+IN    ?= $($(DATASET)_in)
+Q     ?= $($(DATASET)_q)
+OUT   ?= resultado_$(DATASET).csv
+BASE  ?= lista_enc
+RES   ?= lista_ord
+TOPK  ?= 100
+LIMIT ?= 0
+VG    ?=
+ARGS   = --reader $(DATASET) --input $(IN) --query $(Q) --top-k $(TOPK) --limit $(LIMIT)
 
-# ---- Execucao de todas as combinacoes base x resultado --------------
-ESTRUTURAS := pilha fila lista_seq lista_enc lista_cabeca lista_ord \
-              lista_gen lista_cruz
-SAIDAS     := saidas
-LIMIT      := 0
-TOPK       := 100
-VG_LIMIT   := 5000
-RUNNER     :=
+ESTR := pilha fila lista_seq lista_enc lista_cabeca lista_ord lista_gen lista_cruz
 
-.PHONY: all debug run valgrind todas valgrind-todas todos-readers clean
+.PHONY: all run valgrind todas clean
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
+	$(CC) $^ -o $@ $(LDLIBS)
 
-# -MMD -MP gera .d com as dependencias de headers: alterar um .h recompila
-# apenas os .c que o incluem.
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+obj/%.o: src/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
 
-# Depuracao: sanitizers de memoria e de comportamento indefinido.
-debug: CFLAGS  := $(STD) $(WARN) -g -O0 $(INCLUDES) -fsanitize=address,undefined
-debug: LDFLAGS := -fsanitize=address,undefined
-debug: clean $(TARGET)
-
 run: $(TARGET)
-	./$(TARGET) $(ARGS) --limit 0
+	./$(TARGET) $(ARGS) --base $(BASE) --result $(RES) --output $(OUT)
 
 valgrind: $(TARGET)
-	valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1 \
-		./$(TARGET) $(ARGS) --limit 0
+	valgrind --leak-check=full --error-exitcode=1 \
+	  ./$(TARGET) $(ARGS) --base $(BASE) --result $(RES) --output $(OUT)
 
-# Roda as 64 combinacoes (--base x --result) com o dataset atual.
-# Cada saida vai para saidas/<reader>_<base>_<result>.csv.
-# Termina com erro se alguma combinacao falhar.
+# Todas as combinacoes base x resultado. Ex.: make todas VG="valgrind -q --error-exitcode=99" LIMIT=5000
 todas: $(TARGET)
-	@mkdir -p $(SAIDAS)
-	@falhas=0; total=0; \
-	for b in $(ESTRUTURAS); do \
-	  for r in $(ESTRUTURAS); do \
-	    total=$$((total+1)); \
-	    saida=$$($(RUNNER) ./$(TARGET) --reader $(READER) --input $(DADOS) \
-	      --base $$b --result $$r --query $(CONSULTA) \
-	      --output $(SAIDAS)/$(READER)_$${b}_$${r}.csv \
-	      --top-k $(TOPK) --limit $(LIMIT) 2>&1); st=$$?; \
-	    if [ $$st -eq 0 ] && echo "$$saida" | grep -q '^STATUS=OK'; then \
-	      resumo=$$(echo "$$saida" | grep -E '^(MATCHED|OUTPUT)_RECORDS' | tr '\n' ' '); \
-	      printf 'OK     %-6s base=%-13s result=%-13s %s\n' $(READER) $$b $$r "$$resumo"; \
-	    else \
-	      falhas=$$((falhas+1)); \
-	      printf 'FALHOU %-6s base=%-13s result=%-13s (codigo %s)\n' $(READER) $$b $$r $$st; \
-	    fi; \
-	  done; \
-	done; \
-	echo "== $(READER): $$((total-falhas))/$$total combinacoes OK"; \
-	[ $$falhas -eq 0 ]
-
-# O mesmo, sob Valgrind (mais lento: usa --limit $(VG_LIMIT)).
-valgrind-todas: $(TARGET)
-	@$(MAKE) --no-print-directory todas LIMIT=$(VG_LIMIT) \
-	  RUNNER="valgrind -q --leak-check=full --error-exitcode=99"
-
-# Todas as combinacoes para os dois datasets (Parte 1 e Parte 2).
-# O "-" faz o make continuar para o segundo reader mesmo se o primeiro falhar.
-todos-readers: $(TARGET)
-	-@$(MAKE) --no-print-directory todas READER=nasa \
-	  DADOS=dados/asteroid_dataset_20251019.csv CONSULTA=consultas/nasa_q1.txt
-	-@$(MAKE) --no-print-directory todas READER=deter \
-	  DADOS=dados/deter_amazonia.csv CONSULTA=consultas/deter_q1.txt
+	@mkdir -p saidas; f=0; \
+	for b in $(ESTR); do for r in $(ESTR); do \
+	  o=$$($(VG) ./$(TARGET) $(ARGS) --base $$b --result $$r \
+	       --output saidas/$(DATASET)_$${b}_$${r}.csv 2>&1); \
+	  if [ $$? -eq 0 ] && echo "$$o" | grep -q '^STATUS=OK'; then s=OK; \
+	  else s=FALHOU; f=$$((f+1)); fi; \
+	  printf '%-6s %-13s %-13s\n' $$s $$b $$r; \
+	done; done; \
+	echo "falhas: $$f/64"; [ $$f -eq 0 ]
 
 clean:
-	rm -rf $(OBJ_DIR) $(TARGET) $(RESULTADO) $(SAIDAS)
+	rm -rf obj $(TARGET) saidas resultado_*.csv
 
--include $(DEPS)
+-include $(OBJS:.o=.d)
