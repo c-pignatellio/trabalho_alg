@@ -4,6 +4,10 @@
 #include <errno.h>
 #include <math.h>
 #include <limits.h>
+#include <stdbool.h>
+#include <stdio.h>
+
+#include "item.h"
 
 // Implementação do TAD ITEM: representa um registro de dataset tabular.
 // Gerencia o esquema de colunas, valores numéricos/textuais e contagem de referências.

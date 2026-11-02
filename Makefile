@@ -15,19 +15,28 @@ SRCS := $(wildcard $(SRC_DIR)/*.c) $(wildcard $(SRC_DIR)/estruturas/*.c)
 OBJS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRCS))
 DEPS := $(OBJS:.o=.d)
 
-# Dataset usado por "make run", "make valgrind" e "make todas".
-# Troque aqui ou na linha de comando: make todas READER=deter ...
-#DADOS     := dados/asteroid_dataset_20251019.csv
-#CONSULTA  := consultas/nasa_q4.txt
-#RESULTADO := resultado_nasa.csv
-#READER    := nasa
-DADOS     := dados/deter_amazonia.csv
-CONSULTA  := consultas/deter_q4.txt
-RESULTADO := resultado_deter.csv
-READER    := deter
-ARGS    := --reader $(READER) --input $(DADOS) --base lista_gen \
-           --result pilha --query $(CONSULTA) \
-           --output $(RESULTADO) --top-k 100
+DATASET ?= nasa
+
+ifeq ($(DATASET),nasa)
+  READER    := nasa
+  DADOS     := dados/asteroid_dataset_20251019.csv
+  CONSULTA  := consultas/nasa_q4.txt
+  RESULTADO := resultado_nasa.csv
+else ifeq ($(DATASET),deter)
+  READER    := deter
+  DADOS     := dados/deter_amazonia.csv
+  CONSULTA  := consultas/deter_q4.txt
+  RESULTADO := resultado_deter.csv
+else
+  $(error DATASET invalido: use nasa ou deter)
+endif
+
+BASE        ?= lista_gen
+RESULT_ESTR ?= pilha
+
+ARGS := --reader $(READER) --input $(DADOS) --base $(BASE) \
+        --result $(RESULT_ESTR) --query $(CONSULTA) \
+        --output $(RESULTADO) --top-k 100
 
 # ---- Execucao de todas as combinacoes base x resultado --------------
 ESTRUTURAS := pilha fila lista_seq lista_enc lista_cabeca lista_ord \

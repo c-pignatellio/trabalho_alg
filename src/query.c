@@ -9,6 +9,8 @@
 #include <string.h>
 #include <strings.h>
 
+#include "../include/query.h"
+
 // Tipos
 
 typedef enum { OP_EQ, OP_NE, OP_LE, OP_GE, OP_LT, OP_GT } Op;

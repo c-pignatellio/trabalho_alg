@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Tipos e estruturas internas do TAD Estrutura
 #include "../../include/estruturas/pilha.h"
 #include "../../include/estruturas/fila.h"
 #include "../../include/estruturas/lista_seq.h"
@@ -13,10 +12,9 @@
 #include "../../include/estruturas/lista_cruz.h"
 #include "../../include/estruturas/item.h"
 
-// Enumeração dos tipos de estrutura suportados
-enum Tipo {
+typedef enum {
     T_PILHA, T_FILA, T_SEQ, T_ENC, T_CABECA, T_ORD, T_GEN, T_CRUZ
-};
+} Tipo;
 
 typedef struct {
     void (*inserir)(void *impl, ITEM *it, Estrutura *e);
@@ -117,37 +115,37 @@ static void cruz_inserir(void *impl, ITEM *it, Estrutura *e) {
 
 
 
-// pilha
+/* pilha */
 static void   pilha_perc_v(void *impl, ITEMVisitor cb, void *ctx){ pilha_percorrer((PILHA*)impl, cb, ctx); }
 static size_t pilha_tam_v (const void *impl){ return pilha_tamanho((const PILHA*)impl); }
 static void   pilha_dest_v(void *impl, bool owns){ pilha_destruir((PILHA*)impl, owns); }
 static const VTable VT_PILHA = { pilha_w_inserir, pilha_perc_v, pilha_tam_v, pilha_dest_v };
 
-// fila
+/* fila */
 static void   fila_perc_v(void *impl, ITEMVisitor cb, void *ctx){ fila_percorrer((FILA*)impl, cb, ctx); }
 static size_t fila_tam_v (const void *impl){ return fila_tamanho((const FILA*)impl); }
 static void   fila_dest_v(void *impl, bool owns){ fila_destruir((FILA*)impl, owns); }
 static const VTable VT_FILA  = { fila_w_inserir,  fila_perc_v,  fila_tam_v,  fila_dest_v  };
 
-// seq
+/* seq */
 static void   seq_perc_v(void *impl, ITEMVisitor cb, void *ctx){ lista_seq_percorrer((LISTA_SEQ*)impl, cb, ctx); }
 static size_t seq_tam_v (const void *impl){ return lista_seq_tamanho((const LISTA_SEQ*)impl); }
 static void   seq_dest_v(void *impl, bool owns){ lista_seq_destruir((LISTA_SEQ*)impl, owns); }
 static const VTable VT_SEQ = { seq_inserir, seq_perc_v, seq_tam_v, seq_dest_v };
 
-// cabeca
+/* cabeca */
 static void   cabeca_perc_v(void *impl, ITEMVisitor cb, void *ctx){ lista_cabeca_percorrer((LISTA_CABECA*)impl, cb, ctx); }
 static size_t cabeca_tam_v (const void *impl){ return lista_cabeca_tamanho((const LISTA_CABECA*)impl); }
 static void   cabeca_dest_v(void *impl, bool owns){ lista_cabeca_destruir((LISTA_CABECA*)impl, owns); }
 static const VTable VT_CABECA = { cabeca_inserir, cabeca_perc_v, cabeca_tam_v, cabeca_dest_v };
 
-// ord
+/* ord */
 static void   ord_perc_v(void *impl, ITEMVisitor cb, void *ctx){ lista_ord_percorrer((LISTA_ORD*)impl, cb, ctx); }
 static size_t ord_tam_v (const void *impl){ return lista_ord_tamanho((const LISTA_ORD*)impl); }
 static void   ord_dest_v(void *impl, bool owns){ lista_ord_destruir((LISTA_ORD*)impl, owns); }
 static const VTable VT_ORD = { ord_inserir, ord_perc_v, ord_tam_v, ord_dest_v };
 
-// gen
+/* gen */
 static void   gen_perc_v(void *impl, ITEMVisitor cb, void *ctx){ lista_gen_percorrer((LISTA_GEN*)impl, cb, ctx); }
 static size_t gen_tam_v (const void *impl){ return lista_gen_tamanho((const LISTA_GEN*)impl); }
 static void   gen_dest_v(void *impl, bool owns){ lista_gen_destruir((LISTA_GEN*)impl, owns); }
