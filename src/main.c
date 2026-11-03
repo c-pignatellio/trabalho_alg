@@ -24,7 +24,7 @@ typedef struct {
     long top_k, limit;
 } Args;
 
-/* Tenta parsear os argumentos da linha de comando.
+// Tenta parsear os argumentos da linha de comando.
    Preenche a struct Args com os valores obtidos.
    Retorna true se todos os argumentos obrigatórios foram fornecidos. */
 static bool parse_args(int argc, char **argv, Args *a) {

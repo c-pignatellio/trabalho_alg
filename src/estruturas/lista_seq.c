@@ -1,3 +1,5 @@
+// Lista sequencial (array) de ponteiros para itens. Capacidade fixa ou dinâmica com redimensionamento
+// Suporte a indexed access e percurso sequencial
 #include <stdlib.h>
 #include "../../include/estruturas/lista_seq.h"
 

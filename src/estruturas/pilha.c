@@ -1,3 +1,5 @@
+// Pilha dinâmica implementada com nós encadeados (LIFO)
+// Inserção e remoção sempre no topo. Suporta contagem de tamanho
 #include <stdlib.h>
 #include "../../include/estruturas/pilha.h"
 

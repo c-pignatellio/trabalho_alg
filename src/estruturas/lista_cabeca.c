@@ -1,3 +1,5 @@
+// Lista encadeada com nó cabeça/sentinela real
+// A inserção, busca, remoção e percurso utilizam essa representação
 #include <stdlib.h>
 #include "../../include/estruturas/lista_cabeca.h"
 

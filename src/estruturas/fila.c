@@ -1,5 +1,5 @@
-#include <stdlib.h>
-#include "../../include/estruturas/fila.h"
+// Fila dinâmica implementada com nós encadeados
+// Suporta inserção no fim e remoção do início (FIFO)
 
 typedef struct no_ NO_FILA;
 struct no_ {

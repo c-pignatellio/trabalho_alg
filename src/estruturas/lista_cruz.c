@@ -1,3 +1,5 @@
+// Lista cruzada: associa registros por dois campos de agrupamento (ex.: região × categoria)
+// Permite percurso iterativo sobre grupos e cruzamento de dimensões
 #include <stdlib.h>
 #include <string.h>
 #include "../../include/estruturas/lista_cruz.h"

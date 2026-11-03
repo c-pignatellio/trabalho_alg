@@ -1,3 +1,5 @@
+// Writer: grava arquivo de saída mantendo o mesmo formato do entrada
+
 #include "../include/writer.h"
 
 #include <stdio.h>
@@ -14,7 +16,6 @@ Writer *writer_create(const char *caminho, const ESQUEMA *esq) {
     Writer *w = calloc(1, sizeof *w);
     if (!w) return NULL;
 
-    /* "wb": sem traducao de fim de linha (o terminador ja vem do ESQUEMA). */
     w->arq = fopen(caminho, "wb");
     if (!w->arq) { free(w); return NULL; }
 

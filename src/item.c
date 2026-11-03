@@ -4,9 +4,11 @@
 #include <errno.h>
 #include <math.h>
 #include <limits.h>
-#include "../include/estruturas/item.h"
 
-/* ================================================================ ESQUEMA */
+// Implementação do TAD ITEM: representa um registro de dataset tabular.
+// Gerencia o esquema de colunas, valores numéricos/textuais e contagem de referências.
+
+// Esquema
 
 struct esquema_ {
     int n;
@@ -17,7 +19,7 @@ struct esquema_ {
     const char *fim;
 };
 
-/* strdup/strndup nao sao ISO C99: copia propria. */
+// Cópia própria, dado que strdup/strndup não são ISO C99
 static char *copiar(const char *s, size_t n) {
     char *p = malloc(n + 1);
     if (p == NULL) return NULL;
@@ -28,7 +30,7 @@ static char *copiar(const char *s, size_t n) {
     return p;
 }
 
-/* Remove apenas o terminador da linha. */
+// Remove apenas o terminador da linha
 static size_t tamanho_sem_fim(const char *s, bool *tinha_cr) {
     size_t n = strlen(s);
 
@@ -45,11 +47,7 @@ static size_t tamanho_sem_fim(const char *s, bool *tinha_cr) {
     return n;
 }
 
-/*
- * Divide uma linha CSV em campos.
- * Trata aspas e aspas duplas escapadas.
- * Retorna -1 se encontrar aspas invalidas.
- */
+// Divide uma linha CSV em campos
 static int dividir(const char *s, size_t len, char delim,
                    char *buf, int *off, int max_campos) {
     int n = 0;
@@ -90,7 +88,7 @@ static int dividir(const char *s, size_t len, char delim,
                 fechou_aspas = false;
                 inicio_campo = true;
             } else {
-                /* Depois das aspas finais, so pode vir delimitador ou fim. */
+                // Depois das aspas finais, só pode vir delimitador ou fim
                 return -1;
             }
         } else if (c == delim) {
@@ -102,7 +100,7 @@ static int dividir(const char *s, size_t len, char delim,
 
             inicio_campo = true;
         } else if (c == '"') {
-            /* Aspas so podem abrir no inicio de um campo. */
+            // Aspas só podem abrir no início de um campo
             if (!inicio_campo)
                 return -1;
 
@@ -114,7 +112,7 @@ static int dividir(const char *s, size_t len, char delim,
         }
     }
 
-    /* Linha terminou antes de fechar as aspas. */
+    // Linha terminou antes de fechar as aspas
     if (aspas)
         return -1;
 
@@ -138,7 +136,7 @@ ESQUEMA *esquema_criar(const char *linha_cabecalho,
     e->fim = cr ? "\r\n" : "\n";
     e->cabecalho = copiar(linha_cabecalho, len);
 
-    /* Maximo de campos = numero de delimitadores + 1. */
+    // Máximo de campos = numero de delimitadores + 1.
     int max = 1;
 
     for (size_t i = 0; i < len; i++) {
@@ -242,7 +240,7 @@ void esquema_apagar(ESQUEMA **e) {
     *e = NULL;
 }
 
-/* ================================================================== ITEM */
+// Item
 
 typedef struct {
     int off;
@@ -251,7 +249,7 @@ typedef struct {
 } CAMPO;
 
 struct item_ {
-    const ESQUEMA *esq;  /* Nao e dono do esquema. */
+    const ESQUEMA *esq;  // Não é dono do esquema
     char *linha;
     char *buf;
     CAMPO *campos;
@@ -271,7 +269,7 @@ static bool igual_ignorando_caixa(const char *a, const char *b) {
     return *a == '\0' && *b == '\0';
 }
 
-/* Converte o texto de um campo para numero ou booleano. */
+// Converte o texto de um campo para número ou booleano
 static bool interpretar_numero(const char *txt,
                                char decimal, double *out) {
     while (isspace((unsigned char)*txt))
@@ -280,9 +278,7 @@ static bool interpretar_numero(const char *txt,
     if (*txt == '\0')
         return false;
 
-    /*
-     * Permite espacos no final de true/false.
-     */
+    // Permite espaços no final de true/false
     size_t tam = strlen(txt);
 
     while (tam > 0 && isspace((unsigned char)txt[tam - 1]))
@@ -373,10 +369,7 @@ ITEM *item_criar(const ESQUEMA *e, const char *linha) {
     int achados = dividir(linha, len, e->delim,
                           it->buf, off, n);
 
-    /*
-     * Rejeita linhas malformadas ou com quantidade de
-     * campos diferente da definida pelo esquema.
-     */
+    // Rejeita linhas mal formadas
     if (achados != n) {
         free(off);
         item_apagar(&it);
@@ -406,7 +399,7 @@ ITEM *item_referenciar(ITEM *item) {
     if (item == NULL)
         return NULL;
 
-    /* Evita overflow do contador de referencias. */
+    // Evita overflow do contador de referencias
     if (item->refs <= 0 || item->refs == INT_MAX)
         return NULL;
 

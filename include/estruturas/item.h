@@ -4,20 +4,9 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-/* TAD ITEM: um registro de qualquer dataset tabular delimitado.
-
- Posse de memoria: ITEM usa contagem de referencias. item_criar devolve
- ref = 1; cada estrutura que guardar o mesmo ITEM em outra colecao chama item_referenciar. 
- item_apagar apenas decrementa e libera quando chega a zero, entao o mesmo registro pode estar
- na base e no resultado sem copia e sem double free.
- */
-
 //Descreve as colunas do arquivo. Compartilhado por todos os itens.
 typedef struct esquema_ ESQUEMA;
 
-/* linha_cabecalho: primeira linha do arquivo (com ou sem \r\n).
- * delimitador:     ',' ';' '\t' ...
- * sep_decimal:     '.' ou ',' (dados.gov.br costuma usar ','). */
 ESQUEMA *esquema_criar(const char *linha_cabecalho, char delimitador, char sep_decimal);
 int esquema_num_campos(const ESQUEMA *e);
 const char *esquema_nome_campo(const ESQUEMA *e, int idx);

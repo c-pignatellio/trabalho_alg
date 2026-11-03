@@ -1,3 +1,5 @@
+// Lista ordenada: a ordem é mantida durante a inserção
+// Não permite inserir tudo e ordenar ao final. A ordem deve ser preservada
 #include <stdlib.h>
 #include "../../include/estruturas/lista_ord.h"
 

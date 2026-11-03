@@ -1,17 +1,5 @@
 #include "../include/reader_perfil.h"
 
-/*
- * Perfil "nasa": registros de aproximacao de asteroides (Parte 1).
- *
- * Arquivo: CSV com delimitador ',', ponto decimal, terminador CRLF, campos
- * Sentry vazios quando o asteroide nao esta na lista. Campos booleanos usam
- * True/False, que item_numero converte em 1/0.
- *
- * Todas as colunas abaixo precisam existir; a ORDEM no arquivo nao importa
- * (os campos sao acessados pelo nome) e colunas extras sao toleradas. Assim,
- * abrir o arquivo errado falha cedo, apontando a coluna que falta, em vez de
- * devolver consultas vazias.
- */
 static const char *const COLUNAS_NASA[] = {
     "asteroid_designation", "asteroid_fullname",
     "close_approach_date", "year", "month",

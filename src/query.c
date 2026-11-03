@@ -1,4 +1,5 @@
-#include "../include/query.h"
+// Linguagem de consulta: FILTER, SIM, ACCEPT, ORDER, GROUP, CROSS
+// Operadores: ==, !=, <=, >=, <, > (numéricos e textuais)
 #define _POSIX_C_SOURCE 200809L
 #include <ctype.h>
 #include <errno.h>
@@ -8,7 +9,7 @@
 #include <string.h>
 #include <strings.h>
 
-/* ================================================================ TIPOS */
+// Tipos
 
 typedef enum { OP_EQ, OP_NE, OP_LE, OP_GE, OP_LT, OP_GT } Op;
 
@@ -27,7 +28,7 @@ typedef struct {
     double peso;
 } Sim;
 
-#define MAX_LISTA 2   /* GROUP/CROSS: no maximo 2 dimensoes (limite dos TADs) */
+#define MAX_LISTA 2   // GROUP/CROSS: no máximo 2 dimensões (limite dos TADs)
 
 struct Query {
     Filter *filters; int n_filters, cap_filters;
@@ -42,16 +43,19 @@ struct Query {
     char  *group[MAX_LISTA]; int n_group;
     char  *cross[MAX_LISTA]; int n_cross;
 
-    /* Cache da ultima avaliacao (usado por ORDER|similarity). */
+    // Cachê da ultima avaliação (usado por ORDER|similarity)
     const ITEM *ultimo_item;
     double      ultima_sim;
 };
 
-/* ============================================================ UTILIDADES */
+// Utilidades
 
 static char *copiar(const char *s, size_t n) {
     char *p = malloc(n + 1);
-    if (p) { memcpy(p, s, n); p[n] = '\0'; }
+    if (p) {
+        memcpy(p, s, n);
+        p[n] = '\0';
+    }
     return p;
 }
 
@@ -66,10 +70,6 @@ static void trim(char *s) {
     while (n > 0 && isspace((unsigned char)s[n - 1])) s[--n] = '\0';
 }
 
-/*
- * Divide por '|' no proprio buffer (escreve '\0' nos separadores).
- * Devolve a quantidade de tokens (>= 1). Tolerante a tokens vazios.
- */
 static int dividir_pipe(char *linha, char *toks[], int max) {
     if (max <= 0) return 0;
 
@@ -81,7 +81,7 @@ static int dividir_pipe(char *linha, char *toks[], int max) {
     return n;
 }
 
-/* Interpreta alvo numerico (ponto decimal). Aceita +/-, expoente. */
+// Interpreta alvo numérico (ponto decimal). Aceita +/-, expoente
 static bool parse_num(const char *s, double *out) {
     if (!s || !*s) return false;
 
@@ -97,7 +97,7 @@ static bool parse_num(const char *s, double *out) {
     return true;
 }
 
-/* `true`/`false` case-insensitive -> 1/0. Caso contrario, false. */
+// true/false case-insensitive -> 1/0. Caso contrário, false
 static bool parse_bool_txt(const char *s, double *out) {
     if (!s) return false;
     while (*s && isspace((unsigned char)*s)) s++;
@@ -129,7 +129,8 @@ static bool cmp_num(double v, Op op, double alvo) {
     return false;
 }
 
-/* Comparacao de texto case-insensitive; ordem lexicografica em tolower. */
+// Comparação de texto case-insensitive
+// Ordem lexicográfica em tolower
 static int cmp_txt_ci(const char *a, const char *b) {
     while (*a && *b) {
         int ca = tolower((unsigned char)*a);
@@ -153,16 +154,12 @@ static bool cmp_txt(const char *v, Op op, const char *alvo) {
     return false;
 }
 
-/* Verifica se um campo referenciado existe no cabecalho do item.
- * Como o ESQUEMA e unico por Reader, validar aqui so confirma presenca
- * de nome; nao ha custo relevante (poucas colunas). */
+// Verifica se um campo referenciado existe no cabeçalho do item.
 static int idx_campo(const ITEM *it, const char *nome) {
     const ESQUEMA *e = item_esquema(it);
     if (!e || !nome) return -1;
     return esquema_indice(e, nome);
 }
-
-/* ============================================================ CARGA */
 
 static void falha(const char *linha_fisica, long n, const char *motivo) {
     fprintf(stderr, "query: linha %ld: %s\n  %s\n",
@@ -197,10 +194,16 @@ Query *query_load(const char *caminho) {
     if (!caminho) return NULL;
 
     FILE *f = fopen(caminho, "r");
-    if (!f) { perror("query: fopen"); return NULL; }
+    if (!f) {
+        perror("query: fopen");
+        return NULL;
+    }
 
     Query *q = calloc(1, sizeof *q);
-    if (!q) { fclose(f); return NULL; }
+    if (!q) {
+        fclose(f);
+        return NULL;
+    }
     q->ultima_sim = 1.0;
 
     char linha[512];
@@ -216,7 +219,7 @@ Query *query_load(const char *caminho) {
 
         if (len == 0 || linha[0] == '#') continue;
 
-        /* Guardar copia para o relatorio de erro (trim mexe no buffer). */
+        // Guardar cópia para o relatório de erro (trim mexe no buffer)
         char original[512];
         strncpy(original, linha, sizeof original - 1);
         original[sizeof original - 1] = '\0';
@@ -224,7 +227,11 @@ Query *query_load(const char *caminho) {
         char *tok[8];
         int nt = dividir_pipe(linha, tok, 8);
 
-        if (nt < 1) { falha(original, n, "linha vazia apos split"); ok = false; break; }
+        if (nt < 1) {
+            falha(original, n, "linha vazia apos split");
+            ok = false;
+            break;
+        }
 
         if (!strcmp(tok[0], "FILTER")) {
             if (nt < 4) { falha(original, n, "FILTER espera 4 campos"); ok = false; break; }
@@ -244,14 +251,14 @@ Query *query_load(const char *caminho) {
                 flt.alvo_num = true;
                 flt.alvo = vnum;
             } else {
-                /* Alvo textual: aceita true/false e strings genericas. */
+                // Alvo textual: aceita true/false e strings genéricas
                 if (strlen(tok[3]) >= sizeof flt.alvo_txt) {
                     falha(original, n, "alvo textual longo demais"); ok = false; break;
                 }
                 strcpy(flt.alvo_txt, tok[3]);
                 flt.alvo_num = false;
 
-                /* Operadores relacionais so fazem sentido para numeros. */
+                // Operadores relacionais só fazem sentido para números
                 if (flt.op != OP_EQ && flt.op != OP_NE) {
                     falha(original, n, "operador relacional exige alvo numerico");
                     ok = false; break;
@@ -329,7 +336,7 @@ Query *query_load(const char *caminho) {
 
     if (!ok) { query_destroy(q); return NULL; }
 
-    /* ORDER|similarity so faz sentido com ao menos um SIM. */
+    // ORDER|similarity só faz sentido com ao menos um SIM
     if (q->order_campo[0] && !strcasecmp(q->order_campo, "similarity") &&
         q->n_sims == 0) {
         fprintf(stderr, "query: ORDER|similarity sem SIM\n");
@@ -340,14 +347,13 @@ Query *query_load(const char *caminho) {
     return q;
 }
 
-/* ========================================================== AVALIACAO */
-
+// Avaliação
 bool query_accepts(const Query *q, const ITEM *it) {
     if (!q || !it) return false;
     const ESQUEMA *esq = item_esquema(it);
     if (!esq) return false;
 
-    /* 1) FILTERs (AND). */
+    // FILTERs (AND)
     for (int i = 0; i < q->n_filters; i++) {
         const Filter *f = &q->filters[i];
         int idx = idx_campo(it, f->campo);
@@ -363,7 +369,7 @@ bool query_accepts(const Query *q, const ITEM *it) {
         }
     }
 
-    /* 2) Similaridade (se houver SIM). */
+    // Similaridade (SIM)
     double sim = 1.0;
     if (q->n_sims > 0) {
         double soma = 0.0, soma_peso = 0.0;
@@ -387,7 +393,6 @@ bool query_accepts(const Query *q, const ITEM *it) {
 
     if (q->tem_accept && q->n_sims > 0 && sim < q->accept) return false;
 
-    /* 3) Cache para ORDER|similarity. */
     ((Query *)q)->ultimo_item = it;
     ((Query *)q)->ultima_sim  = sim;
     return true;
@@ -398,7 +403,7 @@ double query_last_similarity(const Query *q) {
     return q->ultima_sim;
 }
 
-/* ========================================================== ACESSORES */
+// Acessores
 
 const char *query_order_field(const Query *q) {
     if (!q || q->order_campo[0] == '\0') return NULL;
@@ -423,8 +428,7 @@ int query_cross_nfields(const Query *q) {
     return q ? q->n_cross : 0;
 }
 
-/* ============================================================ LIMPEZA */
-
+// Limpeza
 void query_destroy(Query *q) {
     if (!q) return;
 
