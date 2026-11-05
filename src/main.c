@@ -59,11 +59,11 @@ static bool parse_args(int argc, char **argv, Args *a) {
 }
 
 typedef struct {
-    const Query *q;          // ponteiro para a consulta ativa
-    Estrutura   *result;     // estrutura onde resultados são inseridos
-    long         matched;    // número de registros que passaram no filtro
+    const Query *q;  // ponteiro para a consulta ativa
+    Estrutura   *result;  // estrutura onde resultados são inseridos
+    long         matched;  // número de registros que passaram no filtro
     double       insert_ms;  // tempo acumulado de insert em result
-} BuscaCtx;                  // contexto passado para o callback de busca
+} BuscaCtx;  // contexto passado para o callback de busca
 
 static void busca_visita(ITEM *it, void *ctx_) {
     BuscaCtx *ctx = ctx_;
@@ -75,10 +75,10 @@ static void busca_visita(ITEM *it, void *ctx_) {
 }
 
 typedef struct {
-    Writer *w;         // escritor de saída
-    long    top_k;     // máximo de itens (0 = todos)
-    long    written;   // contador de itens escritos
-    bool    stop;      // flag para interromper precocemente
+    Writer *w;  // escritor de saída
+    long    top_k;  // máximo de itens (0 = todos)
+    long    written;  // contador de itens escritos
+    bool    stop;  // flag para interromper precocemente
 } WriteCtx;
 
 // Callback que visita cada item durante percurso da estrutura de resultado, escrevendo até top-k itens

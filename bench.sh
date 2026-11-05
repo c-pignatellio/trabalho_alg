@@ -1,5 +1,4 @@
-#!/usr/bin/env bash
-# ------- configuração do experimento (troque AQUI) -------
+
 set -euo pipefail
 
 REP=3
