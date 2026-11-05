@@ -25,7 +25,7 @@ bool lista_enc_inserir(LISTA_ENC *l, ITEM *item) {
     if (l == NULL) return false;
     NO_ENC *novo = malloc(sizeof(NO_ENC));
     if (novo == NULL) return false;
-    novo->item = item;
+    novo->item = item;  // entra no inicio (O(1)), por isso o percurso sai na ordem inversa da insercao
     novo->prox = l->inicio;
     l->inicio = novo;
     l->tamanho++;

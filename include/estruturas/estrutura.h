@@ -8,6 +8,8 @@
 
 typedef struct Estrutura Estrutura;
 
+/* Parametros que vem do Query. So lista_ord (ordem), lista_gen (group) e
+ * lista_cruz (cross) usam; as outras estruturas ignoram. */
 typedef struct {
     const char *ordem_campo;
     bool        ordem_desc;

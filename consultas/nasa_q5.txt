@@ -1,0 +1,7 @@
+FILTER|year|<=|2022
+FILTER|distance_au|<|0.03
+SIM|velocity_km_s|25.0|15.0|1.0
+ACCEPT|0.50
+ORDER|velocity_km_s|DESC
+GROUP|year|month
+CROSS|month|threat_category

@@ -20,7 +20,7 @@ LISTA_SEQ *lista_seq_criar(size_t capacidade) {
 
 bool lista_seq_inserir(LISTA_SEQ *l, ITEM *item) {
     if (l == NULL) return false;
-    if (l->fim >= l->capacidade) {
+    if (l->fim >= l->capacidade) {  // encheu: dobra a capacidade (custo amortizado O(1) por insercao)
         size_t nova_cap = l->capacidade * 2;
         ITEM **temp = realloc(l->itens, nova_cap * sizeof(ITEM *));
         if (temp == NULL) return false;

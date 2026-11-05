@@ -6,7 +6,7 @@
 #include <limits.h>
 #include "../include/estruturas/item.h"
 
-/* ================================================================ ESQUEMA */
+// esquema
 
 struct esquema_ {
     int n;
@@ -17,7 +17,7 @@ struct esquema_ {
     const char *fim;
 };
 
-/* strdup/strndup nao sao ISO C99: copia propria. */
+// strdup/strndup nao sao ISO C99, entao a copia e feita na mao
 static char *copiar(const char *s, size_t n) {
     char *p = malloc(n + 1);
     if (p == NULL) return NULL;
@@ -28,7 +28,7 @@ static char *copiar(const char *s, size_t n) {
     return p;
 }
 
-/* Remove apenas o terminador da linha. */
+// tamanho da linha sem o terminador (\n ou \r\n); *tinha_cr avisa se era CRLF
 static size_t tamanho_sem_fim(const char *s, bool *tinha_cr) {
     size_t n = strlen(s);
 
@@ -47,8 +47,9 @@ static size_t tamanho_sem_fim(const char *s, bool *tinha_cr) {
 
 /*
  * Divide uma linha CSV em campos.
- * Trata aspas e aspas duplas escapadas.
- * Retorna -1 se encontrar aspas invalidas.
+ * Os campos saem sem aspas, com "" virando ", e ficam em buf (cada um
+ * terminado em '\0'); off[i] diz onde o campo i comeca em buf.
+ * Devolve o numero de campos, ou -1 se as aspas estiverem erradas.
  */
 static int dividir(const char *s, size_t len, char delim,
                    char *buf, int *off, int max_campos) {
@@ -90,7 +91,7 @@ static int dividir(const char *s, size_t len, char delim,
                 fechou_aspas = false;
                 inicio_campo = true;
             } else {
-                /* Depois das aspas finais, so pode vir delimitador ou fim. */
+                // depois das aspas finais so pode vir delimitador ou o fim da linha
                 return -1;
             }
         } else if (c == delim) {
@@ -102,7 +103,7 @@ static int dividir(const char *s, size_t len, char delim,
 
             inicio_campo = true;
         } else if (c == '"') {
-            /* Aspas so podem abrir no inicio de um campo. */
+            // aspas so podem abrir no comeco do campo
             if (!inicio_campo)
                 return -1;
 
@@ -114,7 +115,7 @@ static int dividir(const char *s, size_t len, char delim,
         }
     }
 
-    /* Linha terminou antes de fechar as aspas. */
+    // a linha acabou antes de fechar as aspas
     if (aspas)
         return -1;
 
@@ -138,7 +139,7 @@ ESQUEMA *esquema_criar(const char *linha_cabecalho,
     e->fim = cr ? "\r\n" : "\n";
     e->cabecalho = copiar(linha_cabecalho, len);
 
-    /* Maximo de campos = numero de delimitadores + 1. */
+    // no maximo (numero de delimitadores + 1) campos
     int max = 1;
 
     for (size_t i = 0; i < len; i++) {
@@ -242,16 +243,16 @@ void esquema_apagar(ESQUEMA **e) {
     *e = NULL;
 }
 
-/* ================================================================== ITEM */
+// item
 
 typedef struct {
-    int off;
-    bool tem_num;
+    int off;  // onde o texto do campo comeca em buf
+    bool tem_num;  // so da pra confiar em num se o texto era numero/booleano
     double num;
 } CAMPO;
 
 struct item_ {
-    const ESQUEMA *esq;  /* Nao e dono do esquema. */
+    const ESQUEMA *esq;  // nao e dono do esquema
     char *linha;
     char *buf;
     CAMPO *campos;
@@ -271,7 +272,7 @@ static bool igual_ignorando_caixa(const char *a, const char *b) {
     return *a == '\0' && *b == '\0';
 }
 
-/* Converte o texto de um campo para numero ou booleano. */
+// converte o texto do campo em numero ou booleano
 static bool interpretar_numero(const char *txt,
                                char decimal, double *out) {
     while (isspace((unsigned char)*txt))
@@ -280,9 +281,7 @@ static bool interpretar_numero(const char *txt,
     if (*txt == '\0')
         return false;
 
-    /*
-     * Permite espacos no final de true/false.
-     */
+    // espaco no fim de true/false tambem vale
     size_t tam = strlen(txt);
 
     while (tam > 0 && isspace((unsigned char)txt[tam - 1]))
@@ -356,8 +355,8 @@ ITEM *item_criar(const ESQUEMA *e, const char *linha) {
     it->esq = e;
     it->refs = 1;
 
-    it->linha = copiar(linha, len);
-    it->buf = malloc(len + (size_t)n + 2);
+    it->linha = copiar(linha, len);  // a linha original, que vai pra saida
+    it->buf = malloc(len + (size_t)n + 2);  // campos separados, com ate n '\0' a mais
     it->campos = calloc((size_t)n, sizeof(CAMPO));
 
     int *off = malloc((size_t)n * sizeof(int));
@@ -374,8 +373,8 @@ ITEM *item_criar(const ESQUEMA *e, const char *linha) {
                           it->buf, off, n);
 
     /*
-     * Rejeita linhas malformadas ou com quantidade de
-     * campos diferente da definida pelo esquema.
+     * Rejeita linha malformada ou com numero de campos diferente do
+     * que o esquema define.
      */
     if (achados != n) {
         free(off);
@@ -406,7 +405,7 @@ ITEM *item_referenciar(ITEM *item) {
     if (item == NULL)
         return NULL;
 
-    /* Evita overflow do contador de referencias. */
+    // evita estourar o contador de referencias
     if (item->refs <= 0 || item->refs == INT_MAX)
         return NULL;
 

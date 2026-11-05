@@ -2,21 +2,21 @@
 #define READER_PERFIL_H
 
 /*
- * Perfil de um dataset: tudo o que o Reader precisa saber sobre o formato
- * do arquivo. Uso interno dos leitores (reader.c e reader_<dataset>.c); o
- * restante do programa so enxerga reader.h.
+ * Perfil de um dataset: tudo que o Reader precisa saber sobre o formato do
+ * arquivo. E de uso interno dos leitores (reader.c e reader_<dataset>.c);
+ * o resto do programa so enxerga o reader.h.
  *
- * Para adicionar um dataset (ex.: "compras"):
+ * Pra adicionar um dataset (ex.: "compras"):
  *   1. criar src/reader_compras.c definindo READER_PERFIL_COMPRAS;
  *   2. declarar o extern abaixo;
- *   3. incluir o perfil na tabela PERFIS de reader.c.
+ *   3. colocar o perfil na tabela PERFIS do reader.c.
  */
 
 typedef struct {
-    const char *nome;                        /* valor de --reader          */
-    char delimitador;                        /* ',' ';' '\t' ...           */
-    char sep_decimal;                        /* '.' ou ',' nos numeros     */
-    const char *const *colunas_obrigatorias; /* devem existir no cabecalho */
+    const char *nome;  // valor do --reader
+    char delimitador;  // ',' ';' '\t' ...
+    char sep_decimal;  // '.' ou ',' nos numeros
+    const char *const *colunas_obrigatorias;  // tem que existir no cabecalho
     int n_colunas_obrigatorias;
 } ReaderPerfil;
 

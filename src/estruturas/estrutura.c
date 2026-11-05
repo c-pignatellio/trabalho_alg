@@ -16,6 +16,8 @@ typedef enum {
     T_PILHA, T_FILA, T_SEQ, T_ENC, T_CABECA, T_ORD, T_GEN, T_CRUZ
 } Tipo;
 
+/* Tabela de funcoes: toda estrutura concreta oferece essas mesmas 4
+ * operacoes, e o estrutura_create escolhe a tabela na hora pelo nome. */
 typedef struct {
     void (*inserir)(void *impl, ITEM *it, Estrutura *e);
     void (*percorrer)(void *impl, ITEMVisitor cb, void *ctx);
@@ -32,8 +34,9 @@ struct Estrutura {
     char   *ordem_campo;
     bool    ordem_desc;
 
-    const char **group;    int n_group;
-    const char **cross;    int n_cross;
+    const char *const *group;    int n_group;
+    const char *const *cross;    int n_cross;
+    const Query *query;
 
     size_t  idx_gen;
     size_t  idx_cruz;
@@ -52,14 +55,17 @@ static int indice_ordem(Estrutura *e, const ITEM *it) {
 
 static double chave_numerica(Estrutura *e, const ITEM *it) {
     int idx = indice_ordem(e, it);
-    if (idx < 0) return 0.0;
+    // "similarity" nao e coluna, entao usa a que o query_accepts acabou de calcular
+    if (idx < 0)
+        return e->ordem_campo && strcmp(e->ordem_campo, "similarity") == 0
+            ? query_last_similarity(e->query) : 0.0;
     double v;
     return item_numero(it, idx, &v) ? v : 0.0;
 }
 
 static void ord_inserir(void *impl, ITEM *it, Estrutura *e) {
     double k = chave_numerica(e, it);
-    if (e->ordem_desc)
+    if (e->ordem_desc)  // a lista sempre ordena crescente, entao nega a chave pra virar DESC
         k = -k;
     lista_ord_inserir((LISTA_ORD *)impl, it, k);
 }
@@ -87,6 +93,7 @@ static void cabeca_inserir(void *impl, ITEM *it, Estrutura *e) {
 static void gen_inserir(void *impl, ITEM *it, Estrutura *e) {
     const ESQUEMA *esq = item_esquema(it);
 
+    // grupo = 1o campo do GROUP, subgrupo = 2o ("default" se faltar)
     const char *grupo = "default", *sub = "default";
     if (e->n_group >= 1 && e->group) {
         int idx = esquema_indice(esq, e->group[0]);
@@ -101,6 +108,7 @@ static void gen_inserir(void *impl, ITEM *it, Estrutura *e) {
 
 static void cruz_inserir(void *impl, ITEM *it, Estrutura *e) {
     const ESQUEMA *esq = item_esquema(it);
+    // v1 e v2 = valores dos 2 campos do CROSS; o item entra nas listas das duas dimensoes
     const char *v1 = "default", *v2 = "default";
     if (e->n_cross >= 1 && e->cross) {
         int idx = esquema_indice(esq, e->cross[0]);
@@ -115,37 +123,37 @@ static void cruz_inserir(void *impl, ITEM *it, Estrutura *e) {
 
 
 
-/* pilha */
+// pilha
 static void   pilha_perc_v(void *impl, ITEMVisitor cb, void *ctx){ pilha_percorrer((PILHA*)impl, cb, ctx); }
 static size_t pilha_tam_v (const void *impl){ return pilha_tamanho((const PILHA*)impl); }
 static void   pilha_dest_v(void *impl, bool owns){ pilha_destruir((PILHA*)impl, owns); }
 static const VTable VT_PILHA = { pilha_w_inserir, pilha_perc_v, pilha_tam_v, pilha_dest_v };
 
-/* fila */
+// fila
 static void   fila_perc_v(void *impl, ITEMVisitor cb, void *ctx){ fila_percorrer((FILA*)impl, cb, ctx); }
 static size_t fila_tam_v (const void *impl){ return fila_tamanho((const FILA*)impl); }
 static void   fila_dest_v(void *impl, bool owns){ fila_destruir((FILA*)impl, owns); }
 static const VTable VT_FILA  = { fila_w_inserir,  fila_perc_v,  fila_tam_v,  fila_dest_v  };
 
-/* seq */
+// seq
 static void   seq_perc_v(void *impl, ITEMVisitor cb, void *ctx){ lista_seq_percorrer((LISTA_SEQ*)impl, cb, ctx); }
 static size_t seq_tam_v (const void *impl){ return lista_seq_tamanho((const LISTA_SEQ*)impl); }
 static void   seq_dest_v(void *impl, bool owns){ lista_seq_destruir((LISTA_SEQ*)impl, owns); }
 static const VTable VT_SEQ = { seq_inserir, seq_perc_v, seq_tam_v, seq_dest_v };
 
-/* cabeca */
+// cabeca
 static void   cabeca_perc_v(void *impl, ITEMVisitor cb, void *ctx){ lista_cabeca_percorrer((LISTA_CABECA*)impl, cb, ctx); }
 static size_t cabeca_tam_v (const void *impl){ return lista_cabeca_tamanho((const LISTA_CABECA*)impl); }
 static void   cabeca_dest_v(void *impl, bool owns){ lista_cabeca_destruir((LISTA_CABECA*)impl, owns); }
 static const VTable VT_CABECA = { cabeca_inserir, cabeca_perc_v, cabeca_tam_v, cabeca_dest_v };
 
-/* ord */
+// ord
 static void   ord_perc_v(void *impl, ITEMVisitor cb, void *ctx){ lista_ord_percorrer((LISTA_ORD*)impl, cb, ctx); }
 static size_t ord_tam_v (const void *impl){ return lista_ord_tamanho((const LISTA_ORD*)impl); }
 static void   ord_dest_v(void *impl, bool owns){ lista_ord_destruir((LISTA_ORD*)impl, owns); }
 static const VTable VT_ORD = { ord_inserir, ord_perc_v, ord_tam_v, ord_dest_v };
 
-/* gen */
+// gen
 static void   gen_perc_v(void *impl, ITEMVisitor cb, void *ctx){ lista_gen_percorrer((LISTA_GEN*)impl, cb, ctx); }
 static size_t gen_tam_v (const void *impl){ return lista_gen_tamanho((const LISTA_GEN*)impl); }
 static void   gen_dest_v(void *impl, bool owns){ lista_gen_destruir((LISTA_GEN*)impl, owns); }
@@ -183,13 +191,13 @@ Estrutura *estrutura_create(const char *nome, const EstruturaCfg *cfg) {
             e->ordem_campo = malloc(n + 1);
             if (!e->ordem_campo) { free(e); return NULL; }
             memcpy(e->ordem_campo, cfg->ordem_campo, n + 1);
-            if (!e->ordem_campo) { free(e); return NULL; }
         }
         e->ordem_desc = cfg->ordem_desc;
         e->group      = cfg->group;
         e->n_group    = cfg->n_group;
         e->cross      = cfg->cross;
         e->n_cross    = cfg->n_cross;
+        e->query      = cfg->query;
     }
 
     if      (!strcmp(nome, "pilha"))        { e->tipo = T_PILHA;  e->vt = &VT_PILHA;  e->impl = pilha_criar(); }

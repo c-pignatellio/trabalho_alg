@@ -5,37 +5,33 @@
 #include "estruturas/item.h"
 
 /*
- * TAD Writer: grava o arquivo de saida no MESMO formato do arquivo de
- * entrada (mesmo cabecalho, mesmas colunas, mesma ordem, mesmo
- * delimitador, mesmo terminador de linha).
+ * TAD Writer: grava o arquivo de saida igualzinho ao de entrada (mesmo
+ * cabecalho, colunas, ordem, delimitador e terminador de linha).
  *
- * writer_create escreve o cabecalho imediatamente (a partir do ESQUEMA
- * do Reader); depois disso o Writer NAO depende mais do ESQUEMA nem do
- * Reader, e pode sobreviver a reader_close/destroy.
+ * O writer_create ja escreve o cabecalho na hora, a partir do ESQUEMA do
+ * Reader. Depois disso o Writer nao depende mais nem do ESQUEMA nem do
+ * Reader, entao pode continuar vivo depois do reader_close/destroy.
  *
- * Uso tipico:
+ * Uso mais comum:
  *   Writer *w = writer_create(out, reader_esquema(rd));
- *   ...
- *   writer_write(w, it);
- *   ...
+ *   writer_write(w, it);   // quantas vezes precisar
  *   writer_destroy(w);
  *
- * writer_write devolve false se houve falha de I/O (a primeira falha
- * marca o Writer como defeituoso; chamadas seguintes retornam false
- * sem tentar escrever de novo). Apos qualquer false, considere a saida
- * invalida.
+ * Se uma escrita falhar, o Writer fica marcado como defeituoso e as
+ * proximas chamadas ja devolvem false sem tentar de novo. Depois do
+ * primeiro false, a saida nao serve mais.
  */
 
 typedef struct Writer Writer;
 
-/* Abre o arquivo e escreve o cabecalho. NULL se `caminho` ou `esq`
- * forem invalidos, ou em erro de I/O ao abrir/escrever o cabecalho. */
+// Abre o arquivo e escreve o cabecalho. Devolve NULL se `caminho` ou `esq`
+// forem invalidos ou se der erro de I/O nessa parte.
 Writer *writer_create(const char *caminho, const ESQUEMA *esq);
 
-/* Grava `it` seguido do terminador original do dataset. */
+// grava `it` e o terminador de linha original do dataset
 bool writer_write(Writer *w, const ITEM *it);
 
-/* Fecha e libera. Seguro com NULL. */
+// fecha e libera; pode passar NULL
 void writer_destroy(Writer *w);
 
 #endif

@@ -3,12 +3,12 @@
 
 typedef struct no_ NO_CABECA;
 struct no_ {
-    ITEM *item; // NULL na cabeça sentinela
+    ITEM *item;  // fica NULL no no sentinela
     NO_CABECA *prox;
 };
 
 struct lista_cabeca_ {
-    NO_CABECA *cabeca;
+    NO_CABECA *cabeca;  // sentinela fixo: todo no real tem um anterior, entao nao tem caso especial no inicio
     size_t tamanho;
 };
 
@@ -33,6 +33,27 @@ bool lista_cabeca_inserir(LISTA_CABECA *l, ITEM *item) {
     l->cabeca->prox = novo;
     l->tamanho++;
     return true;
+}
+
+bool lista_cabeca_buscar(const LISTA_CABECA *l, const ITEM *item) {
+    if (l == NULL) return false;
+    for (NO_CABECA *n = l->cabeca->prox; n != NULL; n = n->prox) {
+        if (n->item == item) return true;
+    }
+    return false;
+}
+
+ITEM *lista_cabeca_remover(LISTA_CABECA *l, const ITEM *item) {
+    if (l == NULL) return NULL;
+    NO_CABECA *ant = l->cabeca;
+    while (ant->prox != NULL && ant->prox->item != item) ant = ant->prox;
+    if (ant->prox == NULL) return NULL;
+    NO_CABECA *alvo = ant->prox;
+    ITEM *removido = alvo->item;
+    ant->prox = alvo->prox;
+    free(alvo);
+    l->tamanho--;
+    return removido;
 }
 
 size_t lista_cabeca_tamanho(const LISTA_CABECA *l) {

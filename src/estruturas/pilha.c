@@ -56,6 +56,7 @@ size_t pilha_tamanho(const PILHA *p) {
 
 void pilha_percorrer(PILHA *p, void (*cb)(ITEM*, void*), void *ctx) {
     if (p == NULL || cb == NULL) return;
+    // vai do topo pra base (o ultimo inserido vem primeiro), sem desempilhar
     for (NO_PILHA *n = p->topo; n != NULL; n = n->prox) {
         cb(n->item, ctx);
     }

@@ -1,16 +1,15 @@
 #include "../include/reader_perfil.h"
 
 /*
- * Perfil "nasa": registros de aproximacao de asteroides (Parte 1).
+ * Perfil "nasa": asteroides (Parte 1).
+ * CSV com virgula, ponto decimal e CRLF no fim da linha. Os campos Sentry
+ * vem vazios quando o asteroide nao esta na lista, e os booleanos vem como
+ * True/False (o item_numero transforma em 1/0).
  *
- * Arquivo: CSV com delimitador ',', ponto decimal, terminador CRLF, campos
- * Sentry vazios quando o asteroide nao esta na lista. Campos booleanos usam
- * True/False, que item_numero converte em 1/0.
- *
- * Todas as colunas abaixo precisam existir; a ORDEM no arquivo nao importa
- * (os campos sao acessados pelo nome) e colunas extras sao toleradas. Assim,
- * abrir o arquivo errado falha cedo, apontando a coluna que falta, em vez de
- * devolver consultas vazias.
+ * Todas as colunas abaixo precisam existir, mas a ordem no arquivo nao
+ * importa (acessamos por nome) e coluna extra e tolerada. Assim, se abrirem
+ * o arquivo errado o erro aparece logo, dizendo qual coluna falta, em vez
+ * de uma consulta vazia sem explicacao.
  */
 static const char *const COLUNAS_NASA[] = {
     "asteroid_designation", "asteroid_fullname",

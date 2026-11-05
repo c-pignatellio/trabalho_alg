@@ -11,22 +11,21 @@
 #include "../include/query.h"
 #include "../include/estruturas/estrutura.h"
 
-// Obtém o tempo atual em milissegundos
+// tempo atual em milissegundos (relogio monotonico)
 static double now_ms(void) {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return ts.tv_sec * 1000.0 + ts.tv_nsec / 1e6;
 }
 
-// Estrutura que armazena os argumentos da linha de comando
+// argumentos da linha de comando
 typedef struct {
     const char *reader, *input, *base, *result, *query, *output;
     long top_k, limit;
 } Args;
 
-/* Tenta parsear os argumentos da linha de comando.
-   Preenche a struct Args com os valores obtidos.
-   Retorna true se todos os argumentos obrigatórios foram fornecidos. */
+/* Le os argumentos da linha de comando e preenche o Args.
+   Devolve true se todos os obrigatorios vieram. */
 static bool parse_args(int argc, char **argv, Args *a) {
     memset(a, 0, sizeof *a);
     static struct option opts[] = {
@@ -59,11 +58,11 @@ static bool parse_args(int argc, char **argv, Args *a) {
 }
 
 typedef struct {
-    const Query *q;  // ponteiro para a consulta ativa
-    Estrutura   *result;  // estrutura onde resultados são inseridos
-    long         matched;  // número de registros que passaram no filtro
-    double       insert_ms;  // tempo acumulado de insert em result
-} BuscaCtx;  // contexto passado para o callback de busca
+    const Query *q;  // a consulta em uso
+    Estrutura   *result;  // onde os aceitos vao sendo inseridos
+    long         matched;  // quantos passaram na consulta
+    double       insert_ms;  // soma do tempo gasto inserindo em result
+} BuscaCtx;  // contexto que vai pro callback da busca
 
 static void busca_visita(ITEM *it, void *ctx_) {
     BuscaCtx *ctx = ctx_;
@@ -75,13 +74,13 @@ static void busca_visita(ITEM *it, void *ctx_) {
 }
 
 typedef struct {
-    Writer *w;  // escritor de saída
-    long    top_k;  // máximo de itens (0 = todos)
-    long    written;  // contador de itens escritos
-    bool    stop;  // flag para interromper precocemente
+    Writer *w;  // quem escreve a saida
+    long    top_k;  // maximo de itens (0 = todos)
+    long    written;  // quantos ja foram escritos
+    bool    stop;  // bateu o top-k: ignora o resto (o percurso em si nao para)
 } WriteCtx;
 
-// Callback que visita cada item durante percurso da estrutura de resultado, escrevendo até top-k itens
+// callback do percurso do resultado: escreve os itens ate bater o top-k
 static void write_visita(ITEM *it, void *ctx_) {
     WriteCtx *ctx = ctx_;
     if (ctx->stop) return;
@@ -110,7 +109,7 @@ int main(int argc, char **argv) {
     Query    *q    = NULL;
 
     do {
-        // Reader: cria leitor do dataset especificado e abre o arquivo
+        // reader: cria o leitor do dataset escolhido e abre o arquivo
         rd = reader_create(a.reader);
         if (!rd || !reader_open(rd, a.input)) {
             fprintf(stderr, "erro: reader '%s' ou input '%s'\n",
@@ -118,21 +117,21 @@ int main(int argc, char **argv) {
             break;
         }
 
-        // Writer: cria writer que escreve o cabeçalho imediatamente
+        // writer: ja escreve o cabecalho assim que e criado
         wr = writer_create(a.output, reader_esquema(rd));
         if (!wr) {
             fprintf(stderr, "erro: output '%s'\n", a.output);
             break;
         }
 
-        // Query: carrega os metadados para estruturas avançadas
+        // query: le FILTER/SIM/ACCEPT (a busca) e ORDER/GROUP/CROSS (como organizar o resultado)
         q = query_load(a.query);
         if (!q) {
             fprintf(stderr, "erro: query '%s'\n", a.query);
             break;
         }
 
-        // Configuração comum às duas estruturas
+        // config que as duas estruturas compartilham
         EstruturaCfg cfg = {
             .ordem_campo = query_order_field(q),
             .ordem_desc  = query_order_desc(q),
@@ -143,7 +142,7 @@ int main(int argc, char **argv) {
             .query       = q,
         };
 
-        // Base: cria estrutura escolhida (pilha/fila/lista) e marca que ela ownz os itens
+        // base: cria a estrutura escolhida e deixa ela como dona dos itens (libera tudo no destroy)
         base = estrutura_create(a.base, &cfg);
         if (!base) {
             fprintf(stderr, "erro: base '%s'\n", a.base);
@@ -151,7 +150,7 @@ int main(int argc, char **argv) {
         }
         estrutura_set_owns_items(base, true);
 
-        // LOAD: lê todas as linhas do dataset e insere na estrutura base
+        // LOAD: le todas as linhas do dataset e joga na base
         double t_load0 = now_ms();
         long input_records = 0;
         ITEM *it;
@@ -165,24 +164,24 @@ int main(int argc, char **argv) {
         }
         double load_ms = now_ms() - t_load0;
 
-        // Result: estrutura de resultado (ponteiros emprestados: base é dona)
+        // result: so guarda ponteiros emprestados, quem e dona dos itens e a base
         res = estrutura_create(a.result, &cfg);
         if (!res) { fprintf(stderr, "erro: result '%s'\n", a.result); break; }
         estrutura_set_owns_items(res, false);
 
-        // SEARCH + RESULT_INSERT: percorre estrutura base aplicando filtros e inserindo na result
+        // SEARCH + RESULT_INSERT: percorre a base aplicando a consulta e insere os aceitos na result
         BuscaCtx bctx = { .q = q, .result = res, .matched = 0, .insert_ms = 0 };
         double t_search0 = now_ms();
         estrutura_percorrer(base, busca_visita, &bctx);
         double search_ms = now_ms() - t_search0;
 
-        // WRITE (top-k via percurso natural da result): percorre resultado e escreve em arquivo
+        // WRITE: percorre a result na ordem natural dela e escreve ate o top-k
         WriteCtx wctx = { .w = wr, .top_k = a.top_k, .written = 0, .stop = false };
         double t_write0 = now_ms();
         estrutura_percorrer(res, write_visita, &wctx);
         double write_ms = now_ms() - t_write0;
 
-        // Saída final (stdout)
+        // resumo na saida padrao
         printf("STATUS=OK\n");
         printf("INPUT_RECORDS=%ld\n",  input_records);
         printf("MATCHED_RECORDS=%ld\n", bctx.matched);
@@ -195,7 +194,7 @@ int main(int argc, char **argv) {
         rc = 0;
     } while (0);
 
-    // Limpeza de memória
+    // limpeza
     estrutura_destroy(res);
     estrutura_destroy(base);
     query_destroy(q);

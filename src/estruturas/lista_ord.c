@@ -29,9 +29,11 @@ bool lista_ord_inserir(LISTA_ORD *l, ITEM *item, double chave_ordenacao) {
     novo->item = item;
     novo->chave_ordenacao = chave_ordenacao;
 
+    /* Procura a posicao com busca linear (O(n)), assim a lista ta sempre
+     * ordenada. O "<=" faz empate entrar depois dos que ja estavam (estavel). */
     NO_ORD *ant = NULL;
     NO_ORD *atual = l->inicio;
-    while (atual != NULL && atual->chave_ordenacao < chave_ordenacao) {
+    while (atual != NULL && atual->chave_ordenacao <= chave_ordenacao) {
         ant = atual;
         atual = atual->prox;
     }

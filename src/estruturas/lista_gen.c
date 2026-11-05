@@ -2,6 +2,8 @@
 #include <string.h>
 #include "../../include/estruturas/lista_gen.h"
 
+/* Lista generalizada em 3 niveis: lista de grupos -> lista de subgrupos ->
+ * vetor de itens. Nome de grupo/subgrupo com mais de 63 caracteres e cortado. */
 typedef struct subgrupo_ SUBGRUPO;
 typedef struct grupo_ GRUPO;
 

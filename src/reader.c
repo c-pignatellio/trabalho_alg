@@ -5,7 +5,7 @@
 #include "../include/reader.h"
 #include "../include/reader_perfil.h"
 
-/* Tabela de datasets conhecidos: --reader <nome> escolhe uma entrada. */
+// datasets que a gente conhece: o --reader escolhe uma dessas entradas
 static const ReaderPerfil *const PERFIS[] = {
     &READER_PERFIL_NASA,
     &READER_PERFIL_DETER
@@ -15,19 +15,17 @@ static const ReaderPerfil *const PERFIS[] = {
 struct Reader {
     const ReaderPerfil *perfil;
     FILE   *arq;
-    ESQUEMA *esquema;          /* dono: liberado em reader_destroy */
-    char   *linha;             /* buffer reutilizado, cresce sob demanda */
+    ESQUEMA *esquema;  // o reader e o dono, quem libera e o reader_destroy
+    char   *linha;  // buffer reaproveitado, cresce quando precisa
     size_t  cap;
-    long    num_linha;         /* linhas fisicas lidas (cabecalho = 1) */
+    long    num_linha;  // linhas fisicas lidas (o cabecalho conta como 1)
     long    ignoradas;
     long    primeira_invalida;
     char    erro[160];
 };
 
-/* ---------------------------------------------------------------------
- * Unico ponto que depende das assinaturas de esquema_criar/item_criar.
- * Se item.h mudar (ex.: passar a devolver ITEM_ERRO), so isto muda.
- * ------------------------------------------------------------------- */
+// So aqui a gente depende das assinaturas de esquema_criar/item_criar.
+// Se o item.h mudar, so esses dois wrappers precisam mudar.
 static ESQUEMA *novo_esquema(const char *cabecalho, char delim, char decimal) {
     return esquema_criar(cabecalho, delim, decimal);
 }
@@ -35,8 +33,6 @@ static ESQUEMA *novo_esquema(const char *cabecalho, char delim, char decimal) {
 static ITEM *novo_item(ESQUEMA *e, const char *linha) {
     return item_criar(e, linha);
 }
-
-/* ------------------------------------------------------------------ */
 
 static void definir_erro(Reader *r, const char *fmt, const char *arg) {
     snprintf(r->erro, sizeof r->erro, fmt, arg);
@@ -60,8 +56,8 @@ Reader *reader_create(const char *nome) {
 }
 
 /*
- * Le uma linha fisica inteira (qualquer tamanho) para r->linha, incluindo o
- * terminador. Devolve false no fim do arquivo ou em falta de memoria.
+ * Le uma linha fisica inteira (de qualquer tamanho) pra r->linha, com o
+ * terminador junto. Devolve false no fim do arquivo ou se faltar memoria.
  */
 static bool ler_linha(Reader *r) {
     if (r->cap == 0) {
@@ -77,18 +73,18 @@ static bool ler_linha(Reader *r) {
     r->linha[0] = '\0';
     for (;;) {
         if (fgets(r->linha + len, (int)(r->cap - len), r->arq) == NULL)
-            return len > 0;                 /* EOF: ultima linha sem \n */
+            return len > 0;  // EOF: a ultima linha veio sem \n
 
         size_t lido = strlen(r->linha + len);
-        if (lido == 0) {                    /* byte '\0' no meio do arquivo */
+        if (lido == 0) {  // tem um '\0' no meio do arquivo
             definir_erro(r, "%s", "byte nulo encontrado (arquivo binario?)");
             return false;
         }
         len += lido;
         if (r->linha[len - 1] == '\n') return true;
-        if (len + 1 < r->cap) return true;  /* buffer sobrou: EOF sem \n */
+        if (len + 1 < r->cap) return true;  // sobrou espaco no buffer, entao foi EOF sem \n
 
-        /* Buffer cheio sem achar \n: a linha continua, dobra e le mais. */
+        // o buffer encheu sem achar \n: a linha continua, entao dobra e le mais
         char *novo = realloc(r->linha, r->cap * 2);
         if (novo == NULL) {
             definir_erro(r, "%s", "memoria insuficiente");
@@ -108,7 +104,7 @@ bool reader_open(Reader *r, const char *caminho) {
         return false;
     }
     if (r->arq != NULL || r->esquema != NULL) {
-        /* Reabrir apagaria o esquema que itens ainda vivos usam. */
+        // reabrir apagaria o esquema que os itens vivos ainda usam
         definir_erro(r, "%s", "reader ja foi aberto");
         return false;
     }
@@ -138,7 +134,7 @@ bool reader_open(Reader *r, const char *caminho) {
         const char *col = r->perfil->colunas_obrigatorias[i];
         if (esquema_indice(r->esquema, col) < 0) {
             definir_erro(r, "coluna obrigatoria ausente: %s", col);
-            esquema_apagar(&r->esquema);   /* nenhum item existe ainda */
+            esquema_apagar(&r->esquema);  // ainda nao existe nenhum item
             reader_close(r);
             return false;
         }
@@ -156,7 +152,7 @@ ITEM *reader_next(Reader *r) {
     while (ler_linha(r)) {
         r->num_linha++;
 
-        /* Linha so com \r\n (ex.: linha em branco no fim): nao e registro. */
+        // linha so com \r\n (tipo linha em branco no fim) nao e registro
         if (r->linha[strspn(r->linha, "\r\n")] == '\0') continue;
 
         ITEM *it = novo_item(r->esquema, r->linha);

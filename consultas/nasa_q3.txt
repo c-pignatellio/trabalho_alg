@@ -1,0 +1,8 @@
+FILTER|on_sentry_list|==|true
+FILTER|threat_category|!=|SAFE
+SIM|risk_score|1.0|0.5|2.0
+SIM|absolute_magnitude|20.0|5.0|1.0
+ACCEPT|0.40
+ORDER|risk_score|DESC
+GROUP|threat_category|panic_level
+CROSS|panic_level|year

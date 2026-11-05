@@ -5,12 +5,15 @@
 typedef struct no_cruz_ NO_CRUZ;
 typedef struct cabeca_dim_ CABECA_DIM;
 
+/* Cada item tem um unico no, encadeado nas duas listas ao mesmo tempo (uma
+ * por dimensao): nao copia nem o registro nem o no. */
 struct no_cruz_ {
     ITEM *item;
     NO_CRUZ *prox_dim1;
     NO_CRUZ *prox_dim2;
 };
 
+// cabeca de uma lista de uma dimensao: um valor (ex.: "CONCERN") e os nos que tem esse valor
 struct cabeca_dim_ {
     char valor[64];
     NO_CRUZ *primeiro_no;
@@ -58,7 +61,7 @@ bool lista_cruz_inserir(LISTA_CRUZ *lc, ITEM *item, const char *dim1_val, const 
     if (!c1) { free(novo); return false; }
 
     CABECA_DIM *c2 = obter_ou_criar_cabeca(&lc->dim2_cabecas, dim2_val);
-    if (!c2) { free(novo); return false; }   /* c1 não foi mutada ainda → OK */
+    if (!c2) { free(novo); return false; }   // c1 pode ter acabado de ser criada, mas fica vazia na lista, entao nao vaza
 
     novo->prox_dim1 = c1->primeiro_no;
     c1->primeiro_no = novo;
@@ -82,9 +85,19 @@ void lista_cruz_percorrer(LISTA_CRUZ *lc, void (*cb)(ITEM*, void*), void *ctx) {
     }
 }
 
+void lista_cruz_percorrer_dim2(LISTA_CRUZ *lc, void (*cb)(ITEM*, void*), void *ctx) {
+    if (lc == NULL || cb == NULL) return;
+    for (CABECA_DIM *c = lc->dim2_cabecas; c != NULL; c = c->prox) {
+        for (NO_CRUZ *n = c->primeiro_no; n != NULL; n = n->prox_dim2) {
+            cb(n->item, ctx);
+        }
+    }
+}
+
 void lista_cruz_destruir(LISTA_CRUZ *lc, bool owns_items) {
     if (lc == NULL) return;
 
+    // cada no esta nas duas dimensoes: libera pela dim1 e, na dim2, so as cabecas
     CABECA_DIM *c1 = lc->dim1_cabecas;
     while (c1 != NULL) {
         NO_CRUZ *n = c1->primeiro_no;
